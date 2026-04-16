@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pip install python-dotenv)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''app2.py''\\).read\\(\\)\\); print\\(''app2.py: syntax OK''\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''app2.py'',encoding=''utf-8''\\).read\\(\\)\\); print\\(''app2.py: syntax OK''\\)\")",
+      "Bash(python -m pip install python-dotenv mysql-connector-python)",
+      "Bash(python:*)",
+      "Bash(git:*)",
+      "Bash(python3 -c \":*)"
+    ]
+  }
+}

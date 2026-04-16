@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CSM Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1F3C; --navy2:#1A3461; --blue:#2563EB; --blue-light:#3B82F6;
+  --teal:#0891B2; --green:#059669; --green-l:#10B981;
+  --amber:#D97706; --amber-l:#F59E0B;
+  --red:#DC2626; --red-l:#EF4444;
+  --purple:#7C3AED;
+  --slate:#6B7280; --slate-l:#9CA3AF;
+  --bg:#F0F4FB; --surface:#FFFFFF;
+  --border:#E2E8F0; --border2:#CBD5E1;
+  --shadow:0 1px 4px rgba(13,31,60,.06),0 4px 16px rgba(13,31,60,.04);
+  --shadow-md:0 4px 12px rgba(13,31,60,.10),0 12px 32px rgba(13,31,60,.06);
+  --shadow-lg:0 8px 32px rgba(13,31,60,.16);
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px;
+  --font-sans:'Figtree',sans-serif;
+  --font-head:'Syne',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+body{font-family:var(--font-sans);background:var(--bg);color:var(--navy);min-height:100vh;font-size:14px;line-height:1.5}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes countUp{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.hidden{display:none!important}
+.page{padding:20px 24px;animation:fadeUp .35s ease;max-width:1600px;margin:0 auto}
+
+/* ═══ UTILITY ═══════════════════════════════════════ */
+.flex{display:flex;align-items:center}
+.gap-4{gap:4px}.gap-6{gap:6px}.gap-8{gap:8px}.gap-10{gap:10px}.gap-12{gap:12px}.gap-16{gap:16px}
+.fw-600{font-weight:600}.fw-700{font-weight:700}
+.fs-10{font-size:10px}.fs-11{font-size:11px}.fs-12{font-size:12px}.fs-13{font-size:13px}
+.mono{font-family:var(--font-mono)}
+.text-slate{color:var(--slate)}.text-navy{color:var(--navy)}
+.upper{text-transform:uppercase;letter-spacing:.06em}
+
+/* ═══ LOGIN ══════════════════════════════════════════ */
+#login-page{
+  display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:linear-gradient(135deg,var(--navy) 0%,#0f2952 50%,#1a3a6b 100%);
+  position:relative;overflow:hidden
+}
+#login-page::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 20% 80%,rgba(37,99,235,.18) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 50% at 80% 20%,rgba(8,145,178,.15) 0%,transparent 60%);
+}
+.login-box{
+  background:rgba(255,255,255,.97);backdrop-filter:blur(20px);
+  border-radius:24px;padding:40px 44px;width:100%;max-width:500px;
+  box-shadow:0 32px 80px rgba(0,0,0,.35);animation:fadeUp .5s ease;
+  position:relative;z-index:1;border:1px solid rgba(255,255,255,.8)
+}
+.login-brand{text-align:center;margin-bottom:32px}
+.login-icon{
+  width:60px;height:60px;background:linear-gradient(135deg,var(--navy),var(--blue));
+  border-radius:18px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:28px;margin-bottom:14px;box-shadow:0 8px 24px rgba(13,31,60,.25)
+}
+.login-brand h1{font-family:var(--font-head);font-size:26px;color:var(--navy);letter-spacing:-.02em}
+.login-brand p{font-size:13px;color:var(--slate);margin-top:3px}
+.tabs{display:flex;background:#F1F5F9;border-radius:10px;padding:3px;margin-bottom:24px;gap:2px}
+.tab{flex:1;padding:8px;text-align:center;border:none;background:none;cursor:pointer;border-radius:7px;font-size:12px;font-weight:600;color:var(--slate);font-family:var(--font-sans);transition:all .2s}
+.tab.active{background:var(--surface);color:var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+label{font-size:11px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block}
+input[type=text],input[type=email],input[type=password],input[type=number],select{
+  width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);
+  font-size:13px;color:var(--navy);outline:none;background:#F8FAFC;
+  font-family:var(--font-sans);transition:border-color .2s,box-shadow .2s,background .2s
+}
+input:focus,select:focus{border-color:var(--blue);background:var(--surface);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.form-row{margin-bottom:14px}
+.row2{display:flex;gap:10px}.row2 .form-row{flex:1}
+.btn{padding:11px 20px;border-radius:10px;border:none;font-weight:700;font-size:13px;cursor:pointer;width:100%;transition:all .2s;font-family:var(--font-sans);letter-spacing:.01em}
+.btn-primary{background:var(--navy);color:#fff}
+.btn-primary:hover{background:var(--navy2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,31,60,.25)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#1D4ED8;transform:translateY(-1px)}
+.btn-sm{padding:6px 14px;border-radius:8px;border:1.5px solid;background:transparent;font-weight:600;font-size:11px;cursor:pointer;font-family:var(--font-sans);transition:all .2s;white-space:nowrap}
+.btn-outline{padding:8px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-weight:600;font-size:12px;cursor:pointer;font-family:var(--font-sans);color:var(--navy);transition:all .2s}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);background:#EFF6FF}
+.btn-export{padding:8px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);font-weight:600;font-size:11px;cursor:pointer;font-family:var(--font-sans);color:var(--slate);transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-export:hover{border-color:var(--blue);color:var(--blue);background:#EFF6FF}
+.alert{border-radius:10px;padding:10px 14px;font-size:12px;font-weight:600;margin-bottom:14px;display:flex;align-items:flex-start;gap:8px}
+.alert::before{flex-shrink:0;font-size:14px;line-height:1.5}
+.alert-ok{background:#ECFDF5;border:1.5px solid #6EE7B7;color:#065F46}.alert-ok::before{content:"✓"}
+.alert-err{background:#FEF2F2;border:1.5px solid #FECACA;color:var(--red)}.alert-err::before{content:"✗"}
+.alert-warn{background:#FFFBEB;border:1.5px solid #FDE68A;color:#92400E}.alert-warn::before{content:"⚠"}
+.hint{font-size:10px;color:var(--slate-l);margin-top:4px;line-height:1.4}
+
+/* ═══ TOPBAR ═════════════════════════════════════════ */
+.topbar{
+  background:linear-gradient(135deg,var(--navy) 0%,#0f2952 100%);
+  border-radius:20px;padding:16px 24px;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:var(--shadow-md);position:relative;overflow:hidden
+}
+.topbar::after{
+  content:'';position:absolute;top:0;right:0;width:300px;height:100%;
+  background:radial-gradient(ellipse 60% 80% at 100% 50%,rgba(37,99,235,.2) 0%,transparent 70%);
+  pointer-events:none
+}
+.topbar-brand h1{font-family:var(--font-head);font-size:18px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.topbar-brand p{font-size:11px;color:#94A3B8;margin-top:1px}
+.topbar-stats{display:flex;gap:24px;align-items:center}
+.tstat{text-align:center}
+.tstat-val{font-size:20px;font-weight:700;font-family:var(--font-mono);line-height:1;animation:countUp .4s ease}
+.tstat-lbl{font-size:9px;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+.topbar-divider{width:1px;height:32px;background:rgba(255,255,255,.1)}
+.topbar-actions{display:flex;gap:6px;margin-left:16px}
+
+/* ═══ FILTERS ════════════════════════════════════════ */
+.filters{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filter-btn{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--slate);transition:all .2s;font-family:var(--font-sans)}
+.filter-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 2px 8px rgba(13,31,60,.2)}
+.filter-btn:not(.active):hover{border-color:var(--blue);color:var(--blue);background:#EFF6FF}
+.filters-right{margin-left:auto;display:flex;gap:6px;align-items:center}
+
+/* ═══ CARDS ══════════════════════════════════════════ */
+.card{background:var(--surface);border-radius:var(--r-lg);padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.card-title{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--navy);letter-spacing:-.01em}
+.card-sub{font-size:11px;color:var(--slate);margin-top:2px;font-weight:500}
+.card-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:#EFF6FF;color:var(--blue)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+
+/* ═══ KPI CARDS ══════════════════════════════════════ */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{
+  background:var(--surface);border-radius:var(--r-md);padding:16px;
+  border:1px solid var(--border);box-shadow:var(--shadow);
+  position:relative;overflow:hidden;transition:all .2s
+}
+.kpi:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:4px 0 0 4px}
+.kpi.green::before{background:var(--green)}
+.kpi.blue::before{background:var(--blue)}
+.kpi.amber::before{background:var(--amber)}
+.kpi.red::before{background:var(--red)}
+.kpi.purple::before{background:var(--purple)}
+.kpi.teal::before{background:var(--teal)}
+.kpi.navy::before{background:var(--navy)}
+.kpi-icon{font-size:18px;margin-bottom:8px}
+.kpi-lbl{font-size:10px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.kpi-val{font-size:26px;font-weight:700;font-family:var(--font-mono);line-height:1;animation:countUp .4s ease}
+.kpi-sub{font-size:10px;color:var(--slate);margin-top:4px;line-height:1.4}
+.kpi-delta{font-size:11px;font-weight:600;margin-top:5px;display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px}
+.kpi-delta.up{background:#FEF2F2;color:var(--red)}
+.kpi-delta.down{background:#ECFDF5;color:var(--green)}
+.kpi-delta.neutral{background:#F1F5F9;color:var(--slate)}
+
+/* ═══ TABLE ══════════════════════════════════════════ */
+.table-wrap{overflow-x:auto;border-radius:var(--r-md);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{
+  padding:10px 14px;background:var(--navy);color:#fff;font-weight:600;
+  text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em;
+  white-space:nowrap
+}
+thead th:first-child{border-radius:0}
+tbody tr.data-row{cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border)}
+tbody tr.data-row:last-child{border-bottom:none}
+tbody tr.data-row:hover{background:#F0F7FF}
+tbody td{padding:11px 14px;font-size:12px;vertical-align:middle}
+
+/* ═══ HEALTH / SCORE ════════════════════════════════ */
+.hbar-wrap{display:flex;align-items:center;gap:8px}
+.hbar{height:4px;width:44px;background:var(--border);border-radius:4px;overflow:hidden;flex-shrink:0}
+.hbar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.hbadge{font-size:9px;border-radius:20px;padding:2px 8px;font-weight:700;white-space:nowrap}
+.score-circle{width:44px;height:44px;position:relative;flex-shrink:0}
+.score-circle svg{transform:rotate(-90deg)}
+.score-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono)}
+
+/* ═══ SATISFACTION PANEL ═════════════════════════════ */
+.sat-card{
+  background:linear-gradient(135deg,var(--navy) 0%,#0f2952 100%);
+  border-radius:var(--r-lg);padding:22px;margin-bottom:16px;
+  box-shadow:var(--shadow-md);position:relative;overflow:hidden
+}
+.sat-card::before{
+  content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(37,99,235,.25),transparent 70%);
+  border-radius:50%
+}
+.sat-title{font-family:var(--font-head);font-size:16px;color:#fff;font-weight:700;margin-bottom:4px}
+.sat-sub{font-size:11px;color:#94A3B8;margin-bottom:18px}
+.sat-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.sat-metric{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--r-md);padding:14px;backdrop-filter:blur(4px)
+}
+.sat-metric-lbl{font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.sat-metric-val{font-size:24px;font-weight:700;font-family:var(--font-mono);color:#fff}
+.sat-metric-sub{font-size:10px;color:#64748B;margin-top:3px}
+.sat-score-big{
+  font-size:56px;font-weight:700;font-family:var(--font-mono);line-height:1;
+  background:linear-gradient(135deg,#60A5FA,#34D399);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent
+}
+
+/* ═══ PROGRESS BAR ═══════════════════════════════════ */
+.prog-wrap{margin-bottom:8px}
+.prog-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.prog-lbl{font-size:11px;font-weight:600;color:var(--navy)}
+.prog-val{font-size:11px;font-weight:700;font-family:var(--font-mono)}
+.prog-bar{height:6px;background:#F1F5F9;border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* ═══ RISK ROW ═══════════════════════════════════════ */
+.risk-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;margin-bottom:8px;border:1px solid}
+.risk-label{font-size:12px;color:var(--slate);font-weight:500}
+.risk-val{font-weight:700;font-size:13px;font-family:var(--font-mono)}
+
+/* ═══ DETAIL ════════════════════════════════════════ */
+.back-btn{background:none;border:1.5px solid var(--border);border-radius:8px;padding:7px 14px;cursor:pointer;font-size:12px;color:var(--slate);font-weight:600;margin-right:16px;font-family:var(--font-sans);transition:all .2s}
+.back-btn:hover{border-color:var(--blue);color:var(--blue);background:#EFF6FF}
+.detail-header{display:flex;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+.detail-header h2{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--navy);letter-spacing:-.02em;margin:0}
+.health-badge{border-radius:20px;padding:6px 14px;font-weight:700;font-size:12px;border:1.5px solid;margin-left:auto}
+
+/* ═══ SPINNER ═══════════════════════════════════════ */
+.spinner-wrap{display:flex;align-items:center;justify-content:center;min-height:70vh;flex-direction:column;gap:20px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+.spinner-text{font-size:13px;color:var(--slate);font-weight:500}
+.loading-detail{text-align:center;margin-top:8px}
+.loading-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--blue);margin:0 3px;animation:pulse 1.2s ease infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+
+/* ═══ DEBUG ══════════════════════════════════════════ */
+.debug-box{background:#1E293B;border-radius:10px;padding:14px;margin-top:12px;font-family:var(--font-mono);font-size:11px;color:#94A3B8;max-height:180px;overflow-y:auto;white-space:pre-wrap}
+.debug-box .key{color:#38BDF8}.debug-box .val{color:#4ADE80}
+
+/* ═══ QUARTERLY ══════════════════════════════════════ */
+.quarter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.qcard{background:var(--surface);border-radius:var(--r-md);padding:16px;border:1px solid var(--border);text-align:center;box-shadow:var(--shadow)}
+.qcard-q{font-size:10px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.06em}
+.qcard-val{font-size:24px;font-weight:700;font-family:var(--font-mono);color:var(--navy);margin:6px 0}
+.qcard-lbl{font-size:10px;color:var(--slate)}
+
+/* ═══ SUBNAV ════════════════════════════════════════ */
+.subnav{display:flex;gap:4px;margin-bottom:16px;background:var(--surface);border-radius:12px;padding:4px;border:1px solid var(--border);width:fit-content;box-shadow:var(--shadow)}
+.subnav-btn{padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--slate);font-family:var(--font-sans);transition:all .2s}
+.subnav-btn.active{background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(13,31,60,.2)}
+.subnav-btn:not(.active):hover{background:#F1F5F9;color:var(--navy)}
+
+/* ═══ LAST 30 ════════════════════════════════════════ */
+.l30-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.l30-card{border-radius:var(--r-md);padding:14px;border-left:3px solid}
+.l30-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.l30-val{font-size:28px;font-weight:700;font-family:var(--font-mono);line-height:1}
+.l30-sub{font-size:10px;margin-top:4px}
+
+/* ═══ MYSQL ══════════════════════════════════════════ */
+.mysql-result{margin-top:14px;overflow-x:auto}
+.mysql-result table{font-size:11px}
+.section-title{font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--navy);margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+
+/* ═══ MINI TREND ════════════════════════════════════ */
+.mini-trend{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px}
+.mini-trend.pos{background:#FEF2F2;color:var(--red)}
+.mini-trend.neg{background:#ECFDF5;color:var(--green)}
+.mini-trend.flat{background:#F1F5F9;color:var(--slate)}
+
+/* ═══ CONTROL METRICS ════════════════════════════════ */
+.ctrl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.ctrl-card{background:var(--surface);border-radius:var(--r-md);padding:16px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.ctrl-label{font-size:10px;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.ctrl-val{font-size:22px;font-weight:700;font-family:var(--font-mono);color:var(--navy)}
+.ctrl-sub{font-size:11px;color:var(--slate);margin-top:3px}
+.ctrl-bar-wrap{margin-top:8px}
+.ctrl-bar{height:5px;background:#F1F5F9;border-radius:4px;overflow:hidden}
+.ctrl-bar-fill{height:100%;border-radius:4px}
+
+/* ═══ CACHE BANNER ═══════════════════════════════════ */
+.cache-banner{background:linear-gradient(135deg,#EFF6FF,#F0F9FF);border:1.5px solid #BAE6FD;border-radius:var(--r-md);padding:14px 16px;margin-bottom:14px}
+.cache-banner-hd{font-size:13px;font-weight:700;color:#0369A1;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.cache-banner-sub{font-size:11px;color:#64748B;margin-bottom:10px;line-height:1.5}
+.cache-banner-actions{display:flex;gap:8px}
+
+/* ═══ RESPONSIVE ════════════════════════════════════ */
+@media(max-width:768px){
+  .page{padding:12px 14px}
+  .grid2{grid-template-columns:1fr}
+  .grid3{grid-template-columns:1fr 1fr}
+  .topbar{flex-wrap:wrap;gap:12px}
+  .topbar-stats{flex-wrap:wrap;gap:12px}
+  .detail-header{flex-wrap:wrap}
+  .health-badge{margin-left:0}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const API = window.location.origin + "/api";
+const C = {navy:"#0D1F3C",blue:"#2563EB",teal:"#0891B2",green:"#059669",greenL:"#10B981",amber:"#D97706",amberL:"#F59E0B",red:"#DC2626",redL:"#EF4444",purple:"#7C3AED",slate:"#6B7280"};
+const TC = ["#2563EB","#059669","#D97706","#7C3AED","#DC2626","#0891B2","#9D4EDD","#F97316","#065F46","#BE185D"];
+const PRIO_COLORS = {
+  Critical:"#DC2626",Highest:"#DC2626",High:"#D97706",
+  Medium:"#2563EB",Low:"#9CA3AF",Lowest:"#CBD5E1",
+  "Crítico":"#DC2626","Crítica":"#DC2626","Urgente":"#B91C1C",
+  "Alto":"#D97706","Alta":"#D97706",
+  "Medio":"#2563EB","Media":"#2563EB",
+  "Bajo":"#9CA3AF","Baja":"#9CA3AF",
+  "Planificado":"#7C3AED","Planificada":"#7C3AED",
+  "Sin prioridad":"#E2E8F0"
+};
+
+let state = {
+  screen:"login", loginTab:"jira",
+  creds:null, clients:[], selected:null,
+  filter:"all", meta:null, error:"", charts:{},
+  detailTab:"overview",
+  mysql:{host:"",port:3306,user:"",password:"",database:"",connected:false,results:null},
+  debugInfo:null, warning:""
+};
+let loginVerified = false;
+
+function formatDate(iso){
+  try{
+    const d = new Date(iso);
+    if(isNaN(d.getTime())) return iso||"";
+    return d.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"}) +
+      " " + d.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
+  }catch(e){ return iso||""; }
+}
+
+// ═══ HELPERS ════════════════════════════════════════════
+function healthOf(s){
+  if(s>=70) return {color:C.green,bg:"#ECFDF5",label:"Sano",cls:"green"};
+  if(s>=50) return {color:C.amber,bg:"#FFFBEB",label:"En riesgo",cls:"amber"};
+  return {color:C.red,bg:"#FEF2F2",label:"Crítico",cls:"red"};
+}
+
+function satOf(s){
+  if(s>=75) return {color:C.green,label:"Excelente"};
+  if(s>=60) return {color:C.greenL,label:"Bueno"};
+  if(s>=45) return {color:C.amber,label:"Regular"};
+  return {color:C.red,label:"Bajo"};
+}
+
+function computeSatisfaction(c){
+  const slaScore       = c.sla_pct || 0;
+  const firstRespScore = c.first_response_pct || 0;
+  const reopenPenalty  = Math.min(100, (c.reopen_rate||0) * 8);
+  const reopenScore    = Math.max(0, 100 - reopenPenalty);
+  const agingPenalty   = Math.min(100, (c.aging_7||0) * 6);
+  const agingScore     = Math.max(0, 100 - agingPenalty);
+
+  const satisfactionScore = Math.round(
+    slaScore * 0.35 +
+    firstRespScore * 0.25 +
+    reopenScore * 0.25 +
+    agingScore * 0.15
+  );
+
+  const total = c.total || 1;
+  const escalationRate   = Math.round((c.critical_total||0) / total * 100);
+  const fcrRate          = Math.max(0, Math.round(100 - (c.reopen_rate||0)));
+  const resVelocity      = Math.round(((c.last30_resolved||0) / 4.3) * 10) / 10;
+  const backlogPct       = Math.round((c.open||0) / total * 100);
+  const qualityScore     = c.bug_rate > 0
+    ? Math.max(0, Math.round(100 - c.bug_rate * 1.5))
+    : 100;
+  const critSlaScore     = c.critical_sla_pct || 0;
+
+  return { satisfactionScore, escalationRate, fcrRate, resVelocity, backlogPct, qualityScore, critSlaScore };
+}
+
+function filteredClients(){
+  if(state.filter==="all")      return state.clients;
+  if(state.filter==="critical") return state.clients.filter(c=>c.health<50);
+  if(state.filter==="risk")     return state.clients.filter(c=>c.health>=50&&c.health<70);
+  return state.clients.filter(c=>c.health>=70);
+}
+
+function destroyCharts(){
+  Object.values(state.charts).forEach(ch=>{try{ch.destroy()}catch(e){}});
+  state.charts={};
+}
+
+// ═══ CHART.JS DEFAULTS ══════════════════════════════════
+Chart.defaults.font.family = "'Figtree', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = "#6B7280";
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.padding = 12;
+Chart.defaults.plugins.legend.labels.boxWidth = 8;
+
+// ═══ RENDER ══════════════════════════════════════════════
+function render(){
+  destroyCharts();
+  const app = document.getElementById("app");
+  if     (state.screen==="login")     renderLogin(app);
+  else if(state.screen==="loading")   renderLoading(app);
+  else if(state.screen==="dashboard") renderDashboard(app);
+  else if(state.screen==="detail")    renderDetail(app);
+  else if(state.screen==="error")     renderError(app);
+}
+
+// ═══ LOGIN ════════════════════════════════════════════════
+function renderLogin(app){
+  const saved = JSON.parse(localStorage.getItem("csm_creds")||"{}");
+  app.innerHTML=`
+  <div id="login-page">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="login-icon">📊</div>
+      <h1>CSM Dashboard</h1>
+      <p>Customer Success · JIRA Cloud + MySQL</p>
+    </div>
+    <div class="tabs">
+      <button class="tab ${state.loginTab==='jira'?'active':''}" onclick="switchTab('jira')">🔗 JIRA Cloud</button>
+      <button class="tab ${state.loginTab==='mysql'?'active':''}" onclick="switchTab('mysql')">🗄️ MySQL</button>
+      <button class="tab ${state.loginTab==='debug'?'active':''}" onclick="switchTab('debug')">🔍 Debug</button>
+    </div>
+
+    <div id="tab-jira" class="tab-panel ${state.loginTab==='jira'?'active':''}">
+      <div class="form-row"><label>URL de JIRA</label>
+        <input id="jira-url" type="text" placeholder="https://tuempresa.atlassian.net" value="${saved.url||''}"/>
+      </div>
+      <div class="form-row"><label>Email</label>
+        <input id="jira-email" type="email" placeholder="tu@email.com" value="${saved.email||''}"/>
+      </div>
+      <div class="form-row"><label>API Token</label>
+        <input id="jira-token" type="password" placeholder="••••••••••••••••" value="${saved.token||''}"/>
+        <div class="hint">Genera en: id.atlassian.com → Security → API tokens</div>
+      </div>
+      <div id="conn-status"></div>
+      <div class="form-row" style="margin-top:4px">
+        <button class="btn-outline" style="margin-bottom:10px" onclick="testConnection()">⚡ Probar conexión</button>
+      </div>
+      <div id="cache-banner-top"></div>
+      <div id="jira-config" class="${loginVerified?'':'hidden'}">
+        <div class="form-row"><label>Proyectos (separar con coma)</label>
+          <input id="jira-projects" type="text" placeholder="SV, SAC, VE" value="${saved.projects||''}"/>
+          <div class="hint">Usar la clave del proyecto. Ej: SV</div>
+        </div>
+        <div class="form-row">
+          <label>🏢 Clientes a cargar <span style="font-weight:400">(opcional — vacío = todos)</span></label>
+          <input id="jira-clients" type="text" placeholder="Globalfarm, Knop, Normon" value="${saved.clients||''}"/>
+          <div class="hint">Nombres exactos separados por coma.</div>
+        </div>
+        <div class="form-row"><label>Días del período</label>
+          <input id="jira-days" type="number" value="${saved.days||90}" min="7" max="365"/>
+        </div>
+        <div id="cache-banner"></div>
+        <button class="btn btn-primary" onclick="loadMetrics()">Cargar métricas →</button>
+      </div>
+    </div>
+
+    <div id="tab-mysql" class="tab-panel ${state.loginTab==='mysql'?'active':''}">
+      <div class="row2">
+        <div class="form-row"><label>Host</label><input id="my-host" type="text" placeholder="localhost" value="${state.mysql.host||''}"/></div>
+        <div class="form-row"><label>Puerto</label><input id="my-port" type="number" value="${state.mysql.port||3306}"/></div>
+      </div>
+      <div class="form-row"><label>Usuario</label><input id="my-user" type="text" value="${state.mysql.user||''}"/></div>
+      <div class="form-row"><label>Contraseña</label><input id="my-pwd" type="password" value="${state.mysql.password||''}"/></div>
+      <div class="form-row"><label>Base de datos</label><input id="my-db" type="text" value="${state.mysql.database||''}"/></div>
+      <div id="my-status"></div>
+      <button class="btn btn-blue" style="margin-top:6px" onclick="testMySQL()">Probar conexión MySQL</button>
+    </div>
+
+    <div id="tab-debug" class="tab-panel ${state.loginTab==='debug'?'active':''}">
+      <p style="font-size:12px;color:var(--slate);margin-bottom:12px;line-height:1.6">Analiza un proyecto JIRA para detectar campos SLA y de cliente disponibles.</p>
+      <div class="form-row"><label>Proyectos a diagnosticar</label>
+        <input id="debug-projects" type="text" placeholder="SV" value="${saved.projects||''}"/>
+      </div>
+      <button class="btn-outline" onclick="runDebug()">🔍 Ejecutar diagnóstico</button>
+      <div id="debug-result"></div>
+    </div>
+  </div>
+  </div>`;
+  setTimeout(checkCache, 100);
+}
+
+function switchTab(tab){
+  state.loginTab=tab;
+  document.querySelectorAll(".tab").forEach((t,i)=>{
+    const tabs=["jira","mysql","debug"];
+    t.classList.toggle("active",tabs[i]===tab);
+  });
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("tab-"+tab).classList.add("active");
+}
+
+async function testConnection(){
+  const url=v("jira-url"),email=v("jira-email"),token=v("jira-token");
+  const el=document.getElementById("conn-status");
+  el.innerHTML='<div class="alert alert-warn">Conectando…</div>';
+  try{
+    const r=await post("/test-connection",{url,email,token});
+    if(r.ok){
+      el.innerHTML=`<div class="alert alert-ok">Conectado como <b>${r.displayName}</b> (${r.email})</div>`;
+      loginVerified=true;
+      document.getElementById("jira-config").classList.remove("hidden");
+      checkCache();
+    } else {
+      el.innerHTML=`<div class="alert alert-err">${r.error}</div>`;
+    }
+  }catch(e){
+    el.innerHTML=`<div class="alert alert-err">${e.message}</div>`;
+  }
+}
+
+async function checkCache(){
+  try{
+    const r = await fetch(API+"/cache/info");
+    const info = await r.json();
+    const el1 = document.getElementById("cache-banner-top");
+    const el2 = document.getElementById("cache-banner");
+    const el  = el2 || el1;
+    if(!el) return;
+    if(!info.available){ if(el) el.innerHTML=""; return; }
+    const at = formatDate(info.generated_at);
+    const proj = (info.projects||[]).join(", ")||"—";
+    const cf = info.clients_filter ? ` · Clientes: ${info.clients_filter}` : "";
+    const html = `
+      <div class="cache-banner">
+        <div class="cache-banner-hd">💾 Cache disponible</div>
+        <div class="cache-banner-sub">${at} · ${info.total_issues} tickets · ${info.clients_count} clientes · ${proj} · ${info.days}d${cf}</div>
+        <div class="cache-banner-actions">
+          <button class="btn btn-blue" style="flex:1;padding:8px;width:auto" onclick="loadFromCache()">⚡ Usar datos en cache</button>
+          <button class="btn-outline" style="flex:1;padding:8px" onclick="clearAndReload()">🔄 Borrar cache</button>
+        </div>
+      </div>`;
+    if(el1) el1.innerHTML=html;
+    if(el2) el2.innerHTML=html;
+  }catch(e){}
+}
+
+async function loadFromCache(){
+  state.screen="loading"; render();
+  try{
+    const r = await fetch(API+"/cache/load");
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.error||"Error");
+    if(d.params){
+      const saved = JSON.parse(localStorage.getItem("csm_creds")||"{}");
+      state.creds = {...saved, ...d.params};
+    }
+    state.clients = d.clients||[];
+    state.meta    = {total:d.total_issues, at:d.generated_at};
+    state.warning = (d.warning||"") + " [Datos desde cache]";
+    state.screen  = "dashboard"; state.filter = "all";
+  }catch(e){ state.error=e.message; state.screen="error"; }
+  render();
+}
+
+async function clearAndReload(){
+  await fetch(API+"/cache/clear",{method:"POST"});
+  const el1 = document.getElementById("cache-banner-top");
+  const el2 = document.getElementById("cache-banner");
+  if(el1) el1.innerHTML="";
+  if(el2) el2.innerHTML="";
+}
+
+async function testMySQL(){
+  const cfg={host:v("my-host"),port:parseInt(v("my-port")),user:v("my-user"),password:v("my-pwd"),database:v("my-db")};
+  const el=document.getElementById("my-status");
+  el.innerHTML='<div class="alert alert-warn">Conectando…</div>';
+  try{
+    const r=await post("/mysql/test",cfg);
+    if(r.ok){
+      Object.assign(state.mysql,cfg,{connected:true});
+      el.innerHTML='<div class="alert alert-ok">MySQL conectado correctamente</div>';
+    } else {
+      el.innerHTML=`<div class="alert alert-err">${r.error}</div>`;
+    }
+  }catch(e){
+    el.innerHTML=`<div class="alert alert-err">${e.message}</div>`;
+  }
+}
+
+async function runDebug(){
+  const url=v("jira-url")||JSON.parse(localStorage.getItem("csm_creds")||"{}").url||"";
+  const email=v("jira-email")||JSON.parse(localStorage.getItem("csm_creds")||"{}").email||"";
+  const token=v("jira-token")||JSON.parse(localStorage.getItem("csm_creds")||"{}").token||"";
+  const projects=v("debug-projects").split(",").map(s=>s.trim()).filter(Boolean);
+  const el=document.getElementById("debug-result");
+  el.innerHTML='<div class="alert alert-warn" style="margin-top:10px">Analizando…</div>';
+  try{
+    const r=await post("/debug-sample",{url,email,token,projects});
+    if(r.total_in_project===0){
+      el.innerHTML=`<div class="alert alert-err" style="margin-top:10px">⚠️ No hay issues. Verifica la clave del proyecto.</div>`;
+      return;
+    }
+    let html=`<div class="debug-box" style="margin-top:10px">`;
+    html+=`<span class="key">Total en proyecto: </span><span class="val">${r.total_in_project}</span>\n`;
+    html+=`<span class="key">Issue muestra:     </span><span class="val">${r.sample_key}</span>\n`;
+    html+=`<span class="key">Estado:            </span><span class="val">${r.sample_status}</span>\n\n`;
+    if(r.sla_candidates&&Object.keys(r.sla_candidates).length){
+      html+=`<span class="key">── Campos SLA ──</span>\n`;
+      Object.keys(r.sla_candidates).forEach(k=>{html+=`<span class="val">  ${k}</span>\n`;});
+    }
+    if(r.org_candidates&&Object.keys(r.org_candidates).length){
+      html+=`\n<span class="key">── Campos cliente ──</span>\n`;
+      Object.keys(r.org_candidates).forEach(k=>{html+=`<span class="val">  ${k}</span>\n`;});
+    }
+    html+=`</div>`;
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML=`<div class="alert alert-err" style="margin-top:10px">✗ ${e.message}</div>`;
+  }
+}
+
+function v(id){const el=document.getElementById(id);return el?el.value.trim():"";}
+async function post(ep,body){const r=await fetch(API+ep,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});return r.json();}
+
+async function loadMetrics(){
+  const url=v("jira-url"),email=v("jira-email"),token=v("jira-token");
+  const projects=v("jira-projects").split(",").map(s=>s.trim()).filter(Boolean);
+  const clients=v("jira-clients")||"";
+  const slaField="customfield_11324";
+  const days=parseInt(v("jira-days"))||90;
+  const cfg={url,email,token,projects,clients,slaField,days};
+  localStorage.setItem("csm_creds",JSON.stringify(cfg));
+  state.creds=cfg; state.screen="loading"; render();
+  try{
+    const d=await post("/metrics",cfg);
+    if(!d.ok) throw new Error(d.error||"Error desconocido");
+    state.clients=d.clients||[];
+    state.meta={total:d.total_issues,at:d.generated_at};
+    state.warning=d.warning||"";
+    state.screen="dashboard"; state.filter="all";
+  }catch(e){state.error=e.message;state.screen="error";}
+  render();
+}
+
+// ═══ LOADING ══════════════════════════════════════════════
+function renderLoading(app){
+  app.innerHTML=`
+  <div class="spinner-wrap">
+    <div class="spinner"></div>
+    <div class="spinner-text">Consultando JIRA…</div>
+    <div class="loading-detail" style="color:var(--slate);font-size:12px">
+      Esto puede tardar unos segundos
+    </div>
+    <div class="loading-dots"><span></span><span></span><span></span></div>
+  </div>`;
+}
+
+// ═══ ERROR ════════════════════════════════════════════════
+function renderError(app){
+  app.innerHTML=`
+  <div class="spinner-wrap">
+    <div style="text-align:center;max-width:460px;animation:fadeUp .4s ease">
+      <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+      <h2 style="margin-bottom:10px;font-family:var(--font-head)">Error al cargar</h2>
+      <p style="color:var(--slate);font-size:13px;margin-bottom:24px;line-height:1.6">${state.error}</p>
+      <button class="btn btn-primary" style="width:auto;padding:10px 28px" onclick="state.screen='login';render()">← Volver al inicio</button>
+    </div>
+  </div>`;
+}
+
+// ═══ TOPBAR ═══════════════════════════════════════════════
+function topbarHtml(){
+  const totalOpen  = state.clients.reduce((a,c)=>a+c.open,0);
+  const avgSla     = state.clients.length ? Math.round(state.clients.reduce((a,c)=>a+c.sla_pct,0)/state.clients.length) : 0;
+  const critClients= state.clients.filter(c=>c.health<50).length;
+  const critTickets= state.clients.reduce((a,c)=>a+(c.critical_total||0),0);
+  const metaStr    = state.meta ? ` · ${state.meta.total} tickets · ${formatDate(state.meta.at)}` : "";
+
+  // Compute global satisfaction avg
+  const avgSat = state.clients.length
+    ? Math.round(state.clients.reduce((a,c)=>a+computeSatisfaction(c).satisfactionScore,0)/state.clients.length)
+    : 0;
+
+  return `<div class="topbar">
+    <div class="topbar-brand"><h1>📊 CSM Dashboard</h1><p>JIRA Cloud${metaStr}</p></div>
+    <div class="topbar-stats">
+      <div class="tstat"><div class="tstat-val" style="color:#60A5FA">${state.clients.length}</div><div class="tstat-lbl">Clientes</div></div>
+      <div class="topbar-divider"></div>
+      <div class="tstat"><div class="tstat-val" style="color:${totalOpen>20?C.amberL:C.greenL}">${totalOpen}</div><div class="tstat-lbl">Abiertos</div></div>
+      <div class="tstat" title="Promedio SLA global"><div class="tstat-val" style="color:${avgSla>=80?C.greenL:C.redL}">${avgSla}%</div><div class="tstat-lbl">SLA global</div></div>
+      <div class="tstat" title="Score de satisfacción promedio estimado"><div class="tstat-val" style="color:${avgSat>=70?C.greenL:avgSat>=50?C.amberL:C.redL}">${avgSat}</div><div class="tstat-lbl">Satisfacción</div></div>
+      <div class="tstat" title="Tickets prioridad Crítica"><div class="tstat-val" style="color:${critTickets>0?C.redL:C.greenL}">${critTickets}</div><div class="tstat-lbl">Críticos</div></div>
+      <div class="tstat" title="Clientes con Health < 50"><div class="tstat-val" style="color:${critClients>0?C.redL:C.greenL}">${critClients}</div><div class="tstat-lbl">En riesgo</div></div>
+      <div class="topbar-divider"></div>
+      <div class="topbar-actions">
+        <button class="btn-sm" style="color:#94A3B8;border-color:#94A3B8" onclick="exportExcel()">⬇ Excel</button>
+        <button class="btn-sm" style="color:#94A3B8;border-color:#94A3B8" onclick="exportPDF()">⬇ PDF</button>
+        <button class="btn-sm" style="color:#60A5FA;border-color:#60A5FA" onclick="loadMetrics2()">↺ Refrescar</button>
+        <button class="btn-sm" style="color:#94A3B8;border-color:#94A3B8" onclick="logout()">Salir</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══ DASHBOARD ════════════════════════════════════════════
+function renderDashboard(app){
+  const clients = filteredClients();
+
+  const rows = clients.map(c=>{
+    const h = healthOf(c.health);
+    const sat = computeSatisfaction(c);
+    const satInfo = satOf(sat.satisfactionScore);
+    const vs = c.total_vs_prev_pct;
+    const vsHtml = vs!=null
+      ? `<span class="mini-trend ${vs>0?'pos':vs<0?'neg':'flat'}">${vs>0?'↑':'↓'} ${Math.abs(vs)}%</span>`
+      : `<span class="mini-trend flat">—</span>`;
+    return `<tr class="data-row" onclick="selectClient('${c.name.replace(/'/g,"\\'")}')">
+      <td style="font-weight:600;font-size:13px">${c.name}</td>
+      <td><div class="hbar-wrap">
+        <div class="hbar"><div class="hbar-fill" style="width:${c.health}%;background:${h.color}"></div></div>
+        <span style="font-weight:700;color:${h.color};font-family:var(--font-mono);font-size:12px">${c.health}</span>
+        <span class="hbadge" style="background:${h.bg};color:${h.color}">${h.label}</span>
+      </div></td>
+      <td style="font-weight:700;color:${sat.satisfactionScore>=70?C.green:sat.satisfactionScore>=50?C.amber:C.red};font-family:var(--font-mono)">${sat.satisfactionScore}</td>
+      <td style="font-weight:700;color:${c.sla_pct>=80?C.green:C.red};font-family:var(--font-mono)">${c.sla_pct}%</td>
+      <td style="font-family:var(--font-mono)">${c.mttr}h</td>
+      <td style="font-weight:700;color:${c.open>8?C.red:C.navy}">${c.open}</td>
+      <td style="font-weight:700;color:${c.aging_7>2?C.red:C.green}">${c.aging_7}</td>
+      <td style="font-weight:700;color:${c.aging_14>0?C.red:C.green}">${c.aging_14}</td>
+      <td style="font-weight:700;color:${c.bug_rate>35?C.red:C.teal}">${c.bug_rate}%</td>
+      <td style="color:var(--slate)">${c.total} ${vsHtml}</td>
+    </tr>`;
+  }).join("");
+
+  const filterBtns = [["all","Todos"],["critical","Críticos"],["risk","En riesgo"],["healthy","Sanos"]]
+    .map(([k,t])=>`<button class="filter-btn${state.filter===k?" active":""}" onclick="state.filter='${k}';render()">${t}</button>`).join("");
+
+  const warn = state.warning
+    ? `<div class="alert alert-warn" style="margin-bottom:14px">${state.warning}</div>` : "";
+
+  app.innerHTML=`<div class="page">
+    ${topbarHtml()}${warn}
+    <div class="filters">
+      ${filterBtns}
+      <div class="filters-right">
+        ${state.mysql.connected?`<button class="btn-outline" onclick="state.screen='mysql';render()">🗄️ MySQL</button>`:""}
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;padding:0;overflow:hidden">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="card-title">Estado de Clientes</div>
+          <div class="card-sub">Clic en una fila para ver el análisis completo · Sat = Satisfacción estimada</div>
+        </div>
+        <span class="card-badge">${clients.length} clientes</span>
+      </div>
+      <div class="table-wrap" style="border:none;border-radius:0">
+        <table><thead><tr>
+          <th>Cliente</th><th>Health</th><th>Sat.</th><th>SLA %</th><th>MTTR</th>
+          <th>Abiertos</th><th>&gt;7d</th><th>&gt;14d</th><th>Bug Rate</th><th>Total</th>
+        </tr></thead><tbody>${rows}</tbody></table>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-hd"><div><div class="card-title">SLA Compliance</div><div class="card-sub">% cumplimiento por cliente · objetivo ≥ 80%</div></div></div>
+        <canvas id="chart-sla" height="220"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div><div class="card-title">MTTR por Cliente</div><div class="card-sub">Tiempo medio de resolución (horas)</div></div></div>
+        <canvas id="chart-mttr" height="220"></canvas>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-hd"><div><div class="card-title">Satisfacción Estimada</div><div class="card-sub">Score compuesto: SLA + 1ª respuesta + reapertura + aging</div></div></div>
+        <canvas id="chart-sat" height="200"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div><div class="card-title">Health Score Global</div><div class="card-sub">Distribución por estado</div></div></div>
+        <canvas id="chart-health-dist" height="200"></canvas>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-hd"><div><div class="card-title">Tickets Abiertos</div><div class="card-sub">Tickets activos por cliente</div></div></div>
+        <canvas id="chart-open" height="190"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div><div class="card-title">Tasa de Escalación</div><div class="card-sub">% tickets críticos del total por cliente</div></div></div>
+        <canvas id="chart-escalation" height="190"></canvas>
+      </div>
+    </div>
+  </div>`;
+
+  setTimeout(()=>{
+    const labels = clients.map(c=>c.name.length>12?c.name.substring(0,12)+"…":c.name);
+    mkBar("chart-sla", labels, clients.map(c=>c.sla_pct), "SLA %",
+      clients.map(c=>c.sla_pct>=80?C.green+"CC":C.red+"CC"), {scales:{y:{max:100,grid:{color:"#F1F5F9"}}}});
+    mkBar("chart-mttr", labels, clients.map(c=>c.mttr), "MTTR (h)",
+      clients.map(()=>C.blue+"CC"));
+
+    // Satisfaction chart
+    const satScores = clients.map(c=>computeSatisfaction(c).satisfactionScore);
+    mkBar("chart-sat", labels, satScores, "Satisfacción",
+      satScores.map(s=>s>=70?C.green+"CC":s>=50?C.amber+"CC":C.red+"CC"),
+      {scales:{y:{max:100,grid:{color:"#F1F5F9"}}}});
+
+    mkBar("chart-open", labels, clients.map(c=>c.open), "Abiertos",
+      clients.map(c=>c.open>8?C.red+"CC":C.amber+"CC"));
+
+    // Escalation rate chart
+    const escRates = clients.map(c=>computeSatisfaction(c).escalationRate);
+    mkBar("chart-escalation", labels, escRates, "Escalación %",
+      escRates.map(r=>r>20?C.red+"CC":r>10?C.amber+"CC":C.green+"CC"),
+      {scales:{y:{max:100,grid:{color:"#F1F5F9"}}}});
+
+    // Health dist donut
+    const sanos  = clients.filter(c=>c.health>=70).length;
+    const riesgo = clients.filter(c=>c.health>=50&&c.health<70).length;
+    const crit   = clients.filter(c=>c.health<50).length;
+    mkDoughnut("chart-health-dist",
+      ["Sanos","En riesgo","Críticos"],
+      [sanos,riesgo,crit],
+      [C.green+"CC",C.amber+"CC",C.red+"CC"],
+      true);
+  },50);
+}
+
+// ═══ DETAIL ═══════════════════════════════════════════════
+function renderDetail(app){
+  const c  = state.selected;
+  const h  = healthOf(c.health);
+  const sat = computeSatisfaction(c);
+  const satInfo = satOf(sat.satisfactionScore);
+  const typeEntries    = Object.entries(c.by_type||{}).sort((a,b)=>b[1]-a[1]);
+  const prioEntries    = Object.entries(c.by_priority||{});
+  const weekly         = (c.weekly||[]).slice(-8);
+  const quarterEntries = Object.entries(c.by_quarter||{}).sort((a,b)=>a[0].localeCompare(b[0]));
+  const motivoEntries  = Object.entries(c.by_motivo||{}).slice(0,8);
+  const dayEntries     = Object.entries(c.by_day||{}).slice(-30);
+
+  const typeLegend = typeEntries.map(([name,val],i)=>
+    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="width:8px;height:8px;border-radius:2px;background:${TC[i%TC.length]};flex-shrink:0"></div>
+      <span class="text-slate fs-11" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${name}">${name}</span>
+      <span style="font-size:12px;font-weight:700;font-family:var(--font-mono)">${val}</span>
+      <span class="text-slate fs-10">${Math.round(val/c.total*100)}%</span>
+    </div>`).join("");
+
+  const risks = [
+    {label:"Tickets > 7 días sin cerrar", val:c.aging_7+" tickets",   warn:c.aging_7>2},
+    {label:"Tickets > 14 días sin cerrar",val:c.aging_14+" tickets",  warn:c.aging_14>0},
+    {label:"Tasa de reapertura",           val:c.reopen_rate+"%",     warn:c.reopen_rate>8},
+    {label:"Ticket más antiguo abierto",   val:c.oldest_open_days+"d",warn:c.oldest_open_days>14},
+    {label:"Tasa de escalación",           val:sat.escalationRate+"%",warn:sat.escalationRate>20},
+  ].map(r=>`<div class="risk-row" style="background:${r.warn?"#FEF2F2":"#F8FAFC"};border-color:${r.warn?"#FECACA":"var(--border)"}">
+    <span class="risk-label">${r.label}</span>
+    <span class="risk-val" style="color:${r.warn?C.red:C.navy}">${r.val}</span>
+  </div>`).join("");
+
+  const qCards = quarterEntries.map(([q,v])=>
+    `<div class="qcard"><div class="qcard-q">${q}</div><div class="qcard-val">${v}</div><div class="qcard-lbl">tickets</div></div>`
+  ).join("");
+
+  const kpis = [
+    {icon:"💚",lbl:"Health Score",val:c.health,sub:"/ 100 pts",color:h.color,cls:h.cls},
+    {icon:"😊",lbl:"Satisfacción",val:sat.satisfactionScore,sub:satInfo.label+" · compuesto",color:satInfo.color,cls:sat.satisfactionScore>=70?"green":sat.satisfactionScore>=50?"amber":"red"},
+    {icon:"🎯",lbl:"SLA Tiempo Abs.",val:c.sla_pct+"%",sub:`${c.sla_good} ok · ${c.sla_bad} breach`,color:c.sla_pct>=80?C.green:C.red,cls:c.sla_pct>=80?"green":"red"},
+    {icon:"⚡",lbl:"MTTR promedio",val:c.mttr+"h",sub:`P50: ${c.res_p50||0}h · P90: ${c.res_p90||0}h`,color:C.blue,cls:"blue"},
+    {icon:"⏱",lbl:"P95 Resolución",val:(c.res_p95||0)+"h",sub:`${c.res_count||0} tickets resueltos`,color:(c.res_p95||0)>168?C.red:(c.res_p95||0)>72?C.amber:C.green,cls:(c.res_p95||0)>168?"red":(c.res_p95||0)>72?"amber":"green"},
+    {icon:"🔔",lbl:"1ª Respuesta SLA",val:(c.first_response_pct||0)+"%",sub:`avg ${c.first_response_avg_h||0}h`,color:(c.first_response_pct||0)>=80?C.green:C.amber,cls:(c.first_response_pct||0)>=80?"green":"amber"},
+    {icon:"🎫",lbl:"Total Tickets",val:c.total,sub:c.total_vs_prev_pct!=null
+      ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-weight:700;font-size:11px;background:${c.total_vs_prev_pct>0?'#FEF2F2':'#ECFDF5'};color:${c.total_vs_prev_pct>0?C.red:C.green}">${c.total_vs_prev_pct>0?'↑':'↓'} ${Math.abs(c.total_vs_prev_pct)}% vs ant.</span>`
+      : "período seleccionado",color:C.navy,cls:"navy"},
+    {icon:"📂",lbl:"Abiertos",val:c.open,sub:`${c.aging_7} >7d · ${c.aging_14} >14d`,color:c.open>8?C.red:C.navy,cls:c.open>8?"red":"navy"},
+  ].map(k=>`<div class="kpi ${k.cls}">
+    <div class="kpi-icon">${k.icon}</div>
+    <div class="kpi-lbl">${k.lbl}</div>
+    <div class="kpi-val" style="color:${k.color}">${k.val}</div>
+    ${k.sub?`<div class="kpi-sub">${k.sub}</div>`:""}
+  </div>`).join("");
+
+  // Satisfaction Panel
+  const satPanel = `
+  <div class="sat-card">
+    <div class="sat-title">📊 Indicadores de Satisfacción del Cliente</div>
+    <div class="sat-sub">Score compuesto estimado a partir de métricas de servicio · Mayor es mejor</div>
+    <div class="sat-metrics">
+      <div class="sat-metric" style="border-left:3px solid ${satInfo.color}">
+        <div class="sat-metric-lbl">Score General</div>
+        <div class="sat-score-big">${sat.satisfactionScore}</div>
+        <div class="sat-metric-sub" style="color:#94A3B8">${satInfo.label} · /100</div>
+      </div>
+      <div class="sat-metric">
+        <div class="sat-metric-lbl">FCR (Proxy 1ª Resolución)</div>
+        <div class="sat-metric-val" style="color:${sat.fcrRate>=85?C.greenL:sat.fcrRate>=70?C.amberL:C.redL}">${sat.fcrRate}%</div>
+        <div class="sat-metric-sub">Sin reaberturas estimado</div>
+      </div>
+      <div class="sat-metric">
+        <div class="sat-metric-lbl">Velocidad Resolución</div>
+        <div class="sat-metric-val" style="color:#60A5FA">${sat.resVelocity}</div>
+        <div class="sat-metric-sub">tickets/semana (últ.30d)</div>
+      </div>
+      <div class="sat-metric">
+        <div class="sat-metric-lbl">Tasa de Escalación</div>
+        <div class="sat-metric-val" style="color:${sat.escalationRate>20?C.redL:sat.escalationRate>10?C.amberL:C.greenL}">${sat.escalationRate}%</div>
+        <div class="sat-metric-sub">Tickets críticos / total</div>
+      </div>
+      <div class="sat-metric">
+        <div class="sat-metric-lbl">Backlog %</div>
+        <div class="sat-metric-val" style="color:${sat.backlogPct>40?C.redL:sat.backlogPct>20?C.amberL:C.greenL}">${sat.backlogPct}%</div>
+        <div class="sat-metric-sub">Abiertos vs total tickets</div>
+      </div>
+      <div class="sat-metric">
+        <div class="sat-metric-lbl">Calidad Servicio</div>
+        <div class="sat-metric-val" style="color:${sat.qualityScore>=80?C.greenL:sat.qualityScore>=60?C.amberL:C.redL}">${sat.qualityScore}%</div>
+        <div class="sat-metric-sub">Inverso Bug rate</div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      ${[
+        {lbl:"SLA Cumplimiento (35%)", val:c.sla_pct, color:c.sla_pct>=80?"#10B981":"#EF4444"},
+        {lbl:"1ª Respuesta SLA (25%)", val:c.first_response_pct||0, color:(c.first_response_pct||0)>=80?"#10B981":"#F59E0B"},
+        {lbl:"Sin Reaberturas (25%)",  val:Math.max(0,100-(c.reopen_rate||0)*8), color:c.reopen_rate<5?"#10B981":c.reopen_rate<10?"#F59E0B":"#EF4444"},
+        {lbl:"Tickets Actualizados (15%)", val:Math.max(0,100-(c.aging_7||0)*6), color:c.aging_7<3?"#10B981":c.aging_7<6?"#F59E0B":"#EF4444"},
+      ].map(b=>`<div class="prog-wrap">
+        <div class="prog-hd">
+          <span class="prog-lbl" style="color:#94A3B8;font-size:10px">${b.lbl}</span>
+          <span class="prog-val" style="color:#fff">${Math.round(b.val)}%</span>
+        </div>
+        <div class="prog-bar" style="background:rgba(255,255,255,.1)">
+          <div class="prog-fill" style="width:${Math.round(b.val)}%;background:${b.color}"></div>
+        </div>
+      </div>`).join("")}
+    </div>
+  </div>`;
+
+  // Last 30 days
+  const l30BreachPct = c.last30_sla_breach_pct||0;
+  const last30Panel = `
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hd">
+      <div><div class="card-title">📅 Resumen Últimos 30 Días</div><div class="card-sub">Métricas de control del período reciente</div></div>
+    </div>
+    <div class="l30-grid">
+      <div class="l30-card" style="background:#FEF2F2;border-color:${C.red}">
+        <div class="l30-lbl" style="color:${C.red}">SLA Infringido</div>
+        <div class="l30-val" style="color:${l30BreachPct>20?C.red:l30BreachPct>10?C.amber:C.green}">${l30BreachPct}%</div>
+        <div class="l30-sub" style="color:var(--slate)">${c.last30_sla_bad||0} breach · ${c.last30_sla_good||0} ok</div>
+      </div>
+      <div class="l30-card" style="background:#FFFBEB;border-color:${C.amber}">
+        <div class="l30-lbl" style="color:${C.amber}">Tickets Críticos</div>
+        <div class="l30-val" style="color:${(c.last30_critical||0)>5?C.red:C.amber}">${c.last30_critical||0}</div>
+        <div class="l30-sub" style="color:var(--slate)">de ${c.last30_total||0} creados</div>
+      </div>
+      <div class="l30-card" style="background:#EFF6FF;border-color:${C.blue}">
+        <div class="l30-lbl" style="color:${C.blue}">T° Absoluto Críticos</div>
+        <div class="l30-val" style="color:${C.blue}">${c.critical_abs_avg_h||0}h</div>
+        <div class="l30-sub" style="color:var(--slate)">prom · P90: ${c.critical_abs_p90||0}h</div>
+      </div>
+      <div class="l30-card" style="background:#ECFDF5;border-color:${C.green}">
+        <div class="l30-lbl" style="color:${C.green}">Resueltos</div>
+        <div class="l30-val" style="color:${C.green}">${c.last30_resolved||0}</div>
+        <div class="l30-sub" style="color:var(--slate)">de ${c.last30_total||0} creados</div>
+      </div>
+      <div class="l30-card" style="background:#F5F3FF;border-color:${C.purple}">
+        <div class="l30-lbl" style="color:${C.purple}">Vel. Resolución</div>
+        <div class="l30-val" style="color:${C.purple}">${sat.resVelocity}/sem</div>
+        <div class="l30-sub" style="color:var(--slate)">tickets cerrados/sem</div>
+      </div>
+    </div>
+  </div>`;
+
+  const subnavs = [["overview","📊 Overview"],["quarterly","📅 Trimestral"],["causes","🔍 Causas"]];
+  const subnav = subnavs.map(([k,t])=>
+    `<button class="subnav-btn${state.detailTab===k?" active":""}" onclick="state.detailTab='${k}';render()">${t}</button>`
+  ).join("");
+
+  const meta=`<div style="font-size:10px;color:var(--slate);margin-top:8px">
+    Campo cliente: <b>${c.client_field_used||"auto"}</b> · Campo SLA: <b>${c.sla_field_used||"auto"}</b>
+  </div>`;
+
+  let tabContent="";
+  if(state.detailTab==="overview"){
+    tabContent=`
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd"><div><div class="card-title">Tendencia de Tickets</div><div class="card-sub">Nuevos vs cerrados por semana</div></div></div>
+          <canvas id="chart-trend" height="200"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><div class="card-title">Motivo de Ticket</div><div class="card-sub">Top causas · ${c.total} tickets</div></div></div>
+          ${motivoEntries.length
+            ? `<div style="display:flex;gap:14px;align-items:center">
+                <div style="flex:1"><canvas id="chart-motivo-ov" height="200"></canvas></div>
+                <div style="min-width:160px">
+                  ${motivoEntries.map(([k,v],i)=>`
+                    <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+                      <div style="width:8px;height:8px;border-radius:2px;background:${TC[i%TC.length]};flex-shrink:0"></div>
+                      <span class="text-slate fs-10" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px" title="${k}">${k}</span>
+                      <span style="font-size:12px;font-weight:700;font-family:var(--font-mono)">${v}</span>
+                      <span class="text-slate fs-10">${Math.round(v/c.total*100)}%</span>
+                    </div>`).join("")}
+                </div>
+              </div>`
+            : `<p class="text-slate" style="font-size:12px;padding:20px 0">Sin datos de motivo.</p>`}
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd"><div><div class="card-title">⏱ Tiempo hasta Resolución</div><div class="card-sub">Distribución · ${c.res_count||0} tickets · MTTR: ${c.mttr}h</div></div></div>
+          <div style="display:flex;gap:16px;align-items:flex-start">
+            <div style="flex:1"><canvas id="chart-res-dist" height="200"></canvas></div>
+            <div style="min-width:120px;padding-top:8px">
+              <div style="margin-bottom:12px">
+                <div class="text-slate fs-10 upper" style="margin-bottom:3px">Mediana P50</div>
+                <div style="font-size:22px;font-weight:700;font-family:var(--font-mono);color:${C.blue}">${c.res_p50||0}h</div>
+              </div>
+              <div style="margin-bottom:12px">
+                <div class="text-slate fs-10 upper" style="margin-bottom:3px">P90</div>
+                <div style="font-size:22px;font-weight:700;font-family:var(--font-mono);color:${C.amber}">${c.res_p90||0}h</div>
+              </div>
+              <div>
+                <div class="text-slate fs-10 upper" style="margin-bottom:3px">P95</div>
+                <div style="font-size:22px;font-weight:700;font-family:var(--font-mono);color:${C.red}">${c.res_p95||0}h</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><div class="card-title">Prioridad</div><div class="card-sub">Distribución por nivel</div></div></div>
+          <canvas id="chart-prio" height="200"></canvas>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-hd"><div><div class="card-title">Distribución por Tipo</div><div class="card-sub">Clasificación de tickets</div></div></div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="width:160px;flex-shrink:0"><canvas id="chart-type" height="160"></canvas></div>
+            <div style="flex:1">${typeLegend}
+              <div style="margin-top:8px;padding:8px 12px;border-radius:8px;background:${c.bug_rate>35?"#FEF2F2":"#F0FDF4"};border-left:3px solid ${c.bug_rate>35?C.red:C.green}">
+                <span style="font-size:11px;font-weight:700;color:${c.bug_rate>35?C.red:C.green}">Bug rate: ${c.bug_rate}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><div class="card-title">Indicadores de Riesgo</div><div class="card-sub">Alertas de control operativo</div></div></div>
+          ${risks}
+        </div>
+      </div>`;
+  } else if(state.detailTab==="quarterly"){
+    tabContent=`
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-hd"><div><div class="card-title">Tickets por Trimestre</div><div class="card-sub">Evolución trimestral del volumen</div></div></div>
+        ${quarterEntries.length
+          ? `<div class="quarter-grid">${qCards}</div><canvas id="chart-quarter" height="180"></canvas>`
+          : '<p class="text-slate" style="font-size:13px">Sin datos de trimestres</p>'}
+      </div>
+      <div class="card">
+        <div class="card-hd"><div><div class="card-title">Tendencia Mensual</div><div class="card-sub">Tickets creados por mes</div></div></div>
+        <canvas id="chart-monthly" height="190"></canvas>
+      </div>`;
+  } else if(state.detailTab==="causes"){
+    tabContent=`
+      <div class="grid2" style="margin-bottom:14px">
+        <div class="card">
+          <div class="card-hd"><div><div class="card-title">Motivo del Ticket</div><div class="card-sub">Distribución por causa</div></div></div>
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="width:150px;flex-shrink:0"><canvas id="chart-motivo-donut" height="150"></canvas></div>
+            <div style="flex:1">
+              ${motivoEntries.length
+                ? motivoEntries.map(([k,v],i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <div style="width:8px;height:8px;border-radius:2px;background:${TC[i%TC.length]};flex-shrink:0"></div>
+                    <span class="text-slate fs-10" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px" title="${k}">${k}</span>
+                    <span style="font-size:12px;font-weight:700;font-family:var(--font-mono)">${v}</span>
+                    <span class="text-slate fs-10">(${Math.round(v/c.total*100)}%)</span>
+                  </div>`).join("")
+                : '<p class="text-slate fs-12">Sin datos de motivo</p>'}
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div><div class="card-title">Motivo — Barras</div><div class="card-sub">Comparativa por causa</div></div></div>
+          ${motivoEntries.length
+            ?`<canvas id="chart-motivo-bar" height="220"></canvas>`
+            :'<p class="text-slate fs-13">Sin datos</p>'}
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><div><div class="card-title">Prioridad</div><div class="card-sub">Distribución por nivel de prioridad</div></div></div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="width:150px;flex-shrink:0"><canvas id="chart-prio-donut" height="150"></canvas></div>
+          <div style="flex:1">
+            ${Object.entries(c.by_priority||{}).map(([k,v])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <div style="width:8px;height:8px;border-radius:2px;background:${PRIO_COLORS[k]||'#64748B'};flex-shrink:0"></div>
+                <span class="text-slate fs-10" style="flex:1">${k}</span>
+                <span style="font-size:12px;font-weight:700;font-family:var(--font-mono)">${v}</span>
+                <span class="text-slate fs-10">(${Math.round(v/c.total*100)}%)</span>
+              </div>`).join("")}
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><div><div class="card-title">HS Tiempo Absoluto — SLA Good vs Bad</div><div class="card-sub">customfield_11418 · Good: ${c.sla_good} (${c.sla_pct}%) · Bad: ${c.sla_bad}</div></div></div>
+        <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+          <div style="width:160px;flex-shrink:0"><canvas id="chart-sla-good-bad" height="160"></canvas></div>
+          <div style="flex:1;min-width:160px">
+            <div class="text-slate fs-11 upper fw-700" style="margin-bottom:10px">Tiempo Absoluto (todos)</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <div style="width:10px;height:10px;border-radius:2px;background:#059669"></div>
+              <span class="fs-12">Good</span>
+              <span style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#059669;margin-left:auto">${c.sla_good}</span>
+              <span class="text-slate fs-11">(${c.sla_pct}%)</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <div style="width:10px;height:10px;border-radius:2px;background:#DC2626"></div>
+              <span class="fs-12">Bad</span>
+              <span style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#DC2626;margin-left:auto">${c.sla_bad}</span>
+              <span class="text-slate fs-11">(${Math.round(100-c.sla_pct)}%)</span>
+            </div>
+            <div style="padding:8px 12px;border-radius:8px;background:${c.sla_pct>=80?"#ECFDF5":"#FEF2F2"};border-left:3px solid ${c.sla_pct>=80?"#059669":"#DC2626"}">
+              <span style="font-size:11px;font-weight:700;color:${c.sla_pct>=80?"#065F46":"#991B1B"}">${c.sla_pct>=80?"✓ SLA ≥ 80% objetivo":"⚠ SLA < 80% objetivo"}</span>
+            </div>
+          </div>
+          <div style="flex:1;min-width:160px;border-left:1px solid var(--border);padding-left:20px">
+            <div class="text-slate fs-11 upper fw-700" style="margin-bottom:10px">⏱ 1ª Respuesta</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <div style="width:10px;height:10px;border-radius:2px;background:#059669"></div>
+              <span class="fs-12">Good</span>
+              <span style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#059669;margin-left:auto">${c.first_response_good||0}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <div style="width:10px;height:10px;border-radius:2px;background:#DC2626"></div>
+              <span class="fs-12">Bad</span>
+              <span style="font-size:18px;font-weight:700;font-family:var(--font-mono);color:#DC2626;margin-left:auto">${c.first_response_bad||0}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span class="text-slate fs-11">SLA 1ª Resp.</span>
+              <span style="font-size:13px;font-weight:700;font-family:var(--font-mono);color:${(c.first_response_pct||0)>=80?C.green:C.amber}">${c.first_response_pct||0}%</span>
+            </div>
+            <div class="text-slate fs-11">Tiempo prom: <b>${c.first_response_avg_h||0}h</b></div>
+          </div>
+          <div style="flex:2;min-width:200px"><canvas id="chart-sla-timeline" height="160"></canvas></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><div><div class="card-title">Tickets por Día</div><div class="card-sub">Volumen diario — últimos 30 días</div></div></div>
+        ${dayEntries.length?`<canvas id="chart-by-day" height="140"></canvas>`:'<p class="text-slate fs-13">Sin datos</p>'}
+      </div>
+      <div class="card" style="border-left:4px solid #DC2626">
+        <div class="card-hd"><div><div class="card-title" style="color:#DC2626">🔴 Tickets Críticos — Análisis</div><div class="card-sub">Total críticos: ${c.critical_total||0}</div></div></div>
+        ${(c.critical_total||0)===0
+          ? `<div style="padding:20px;text-align:center;color:var(--slate);font-size:13px">✅ No hay tickets críticos en el período</div>`
+          : `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+              <div style="flex:0 0 180px">
+                <div class="text-slate fs-11 upper fw-700" style="margin-bottom:10px">HS Tiempo Abs. (Críticos)</div>
+                <canvas id="chart-crit-sla" height="160"></canvas>
+                <div style="margin-top:10px">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <div style="width:10px;height:10px;border-radius:2px;background:#059669"></div>
+                    <span class="fw-600 fs-12">Good</span>
+                    <span style="font-size:16px;font-weight:700;font-family:var(--font-mono);color:#059669;margin-left:auto">${c.critical_sla_good||0}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:10px;height:10px;border-radius:2px;background:#DC2626"></div>
+                    <span class="fw-600 fs-12">Bad</span>
+                    <span style="font-size:16px;font-weight:700;font-family:var(--font-mono);color:#DC2626;margin-left:auto">${c.critical_sla_bad||0}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="flex:1;min-width:200px">
+                <div class="text-slate fs-11 upper fw-700" style="margin-bottom:10px">Prioridad (Críticos)</div>
+                <canvas id="chart-crit-prio" height="160"></canvas>
+              </div>
+              <div style="flex:0 0 200px">
+                <div class="text-slate fs-11 upper fw-700" style="margin-bottom:10px">KPIs Críticos</div>
+                <div style="background:#FEF2F2;border-radius:10px;padding:14px">
+                  <div style="margin-bottom:12px">
+                    <div class="text-slate fs-10 upper" style="margin-bottom:2px">SLA Críticos</div>
+                    <div style="font-size:30px;font-weight:700;font-family:var(--font-mono);color:${(c.critical_sla_pct||0)>=80?"#059669":"#DC2626"}">${c.critical_sla_pct||0}%</div>
+                  </div>
+                  <div style="margin-bottom:12px">
+                    <div class="text-slate fs-10 upper" style="margin-bottom:2px">MTTR Críticos</div>
+                    <div style="font-size:30px;font-weight:700;font-family:var(--font-mono);color:#2563EB">${c.critical_mttr||0}h</div>
+                  </div>
+                  <div style="padding:8px 10px;border-radius:8px;background:${(c.critical_sla_pct||0)>=80?"#ECFDF5":"#FEF2F2"};border-left:3px solid ${(c.critical_sla_pct||0)>=80?"#059669":"#DC2626"}">
+                    <span style="font-size:11px;font-weight:700;color:${(c.critical_sla_pct||0)>=80?"#065F46":"#991B1B"}">
+                      ${(c.critical_sla_pct||0)>=80?"✓ Críticos dentro del SLA":"⚠ Críticos fuera del SLA"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>`}
+      </div>`;
+  }
+
+  app.innerHTML=`<div class="page">
+    ${topbarHtml()}
+    <div class="detail-header">
+      <button class="back-btn" onclick="goBack()">← Volver</button>
+      <h2>${c.name}</h2>
+      <div class="health-badge" style="background:${h.bg};border-color:${h.color};color:${h.color}">● ${h.label} ${c.health}/100</div>
+      <button class="btn-sm" style="color:#94A3B8;border-color:#94A3B8;margin-left:8px" onclick="exportPPT()">⬇ PPT con Gráficos</button>
+    </div>
+    <div class="kpi-grid">${kpis}</div>
+    ${satPanel}
+    ${last30Panel}
+    ${meta}
+    <div class="subnav" style="margin-top:16px">${subnav}</div>
+    ${tabContent}
+  </div>`;
+
+  setTimeout(()=>{
+    if(state.detailTab==="overview"){
+      if(weekly.length) mkLine("chart-trend", weekly.map(w=>w.w), [
+        {label:"Nuevos",  data:weekly.map(w=>w.new),    borderColor:C.blue,bg:C.blue+"22"},
+        {label:"Cerrados",data:weekly.map(w=>w.closed), borderColor:C.green,bg:C.green+"22"},
+      ]);
+      if(motivoEntries.length) mkDoughnut("chart-motivo-ov",
+        motivoEntries.map(e=>e[0]), motivoEntries.map(e=>e[1]),
+        motivoEntries.map((_,i)=>TC[i%TC.length]));
+      const buckets = c.res_buckets||{};
+      const bLabels = ["<4h","4-8h","8-24h","1-3d","3-7d",">7d"];
+      const bVals   = bLabels.map(k=>buckets[k]||0);
+      const bColors = ["#059669CC","#34D399CC","#FCD34DCC","#F59E0BCC","#EF4444CC","#DC2626CC"];
+      mkBar("chart-res-dist", bLabels, bVals, "Tickets", bColors);
+      if(prioEntries.length){
+        const pEl=document.getElementById("chart-prio");
+        if(pEl) state.charts.prio=new Chart(pEl,{type:"bar",data:{
+          labels:prioEntries.map(e=>e[0]),
+          datasets:[{data:prioEntries.map(e=>e[1]),backgroundColor:prioEntries.map(([n])=>PRIO_COLORS[n]||C.slate),borderRadius:6}]
+        },options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{grid:{color:"#F1F5F9"}},y:{grid:{display:false}}}}});
+      }
+      if(typeEntries.length) mkDoughnut("chart-type",typeEntries.map(e=>e[0]),typeEntries.map(e=>e[1]));
+    } else if(state.detailTab==="quarterly"){
+      if(quarterEntries.length) mkBar("chart-quarter",
+        quarterEntries.map(e=>e[0]), quarterEntries.map(e=>e[1]), "Tickets",
+        quarterEntries.map(()=>C.blue+"CC"));
+      const monthEntries=Object.entries(c.by_month||{});
+      if(monthEntries.length) mkBar("chart-monthly",
+        monthEntries.map(e=>e[0]), monthEntries.map(e=>e[1]), "Tickets",
+        monthEntries.map(()=>C.teal+"CC"));
+    } else if(state.detailTab==="causes"){
+      if(motivoEntries.length){
+        mkDoughnut("chart-motivo-donut",motivoEntries.map(e=>e[0]),motivoEntries.map(e=>e[1]));
+        mkBar("chart-motivo-bar",motivoEntries.map(e=>e[0]),motivoEntries.map(e=>e[1]),"Tickets",
+          motivoEntries.map((_,i)=>TC[i%TC.length]+"CC"),{indexAxis:"y"});
+      }
+      if(prioEntries.length) mkDoughnut("chart-prio-donut",
+        prioEntries.map(e=>e[0]), prioEntries.map(e=>e[1]),
+        prioEntries.map(([n])=>PRIO_COLORS[n]||C.slate));
+      const slaDEl=document.getElementById("chart-sla-good-bad");
+      if(slaDEl) state.charts.slagb=new Chart(slaDEl,{type:"doughnut",data:{
+        labels:["Good","Bad"],
+        datasets:[{data:[c.sla_good,c.sla_bad],backgroundColor:[C.green+"CC",C.red+"CC"],borderWidth:2,borderColor:"#fff"}]
+      },options:{plugins:{legend:{position:"bottom"}},cutout:"60%"}});
+      const monthE=Object.entries(c.by_month||{}).slice(-6);
+      if(monthE.length) mkBar("chart-sla-timeline",monthE.map(e=>e[0]),monthE.map(e=>e[1]),"Tickets",
+        monthE.map(()=>C.teal+"CC"));
+      if(dayEntries.length) mkBar("chart-by-day",
+        dayEntries.map(e=>e[0].slice(5)), dayEntries.map(e=>e[1]),"Tickets",
+        dayEntries.map(()=>C.blue+"CC"));
+      if((c.critical_total||0)>0){
+        const critSlaEl=document.getElementById("chart-crit-sla");
+        if(critSlaEl) state.charts.critsla=new Chart(critSlaEl,{type:"doughnut",data:{
+          labels:["Good","Bad"],
+          datasets:[{data:[c.critical_sla_good||0,c.critical_sla_bad||0],
+            backgroundColor:[C.green+"CC",C.red+"CC"],borderWidth:2,borderColor:"#fff"}]
+        },options:{plugins:{legend:{display:false}},cutout:"60%"}});
+        const critPrioE=Object.entries(c.critical_by_priority||{});
+        if(critPrioE.length) mkBar("chart-crit-prio",
+          critPrioE.map(e=>e[0]), critPrioE.map(e=>e[1]), "Tickets",
+          critPrioE.map(([n])=>PRIO_COLORS[n]||C.red+"CC"),{indexAxis:"y"});
+      }
+    }
+    // Animate progress bars
+    setTimeout(()=>{
+      document.querySelectorAll(".prog-fill").forEach(el=>{
+        const target = el.style.width;
+        el.style.width="0";
+        setTimeout(()=>{el.style.width=target;},50);
+      });
+    },100);
+  },50);
+}
+
+// ═══ CHART HELPERS ════════════════════════════════════════
+function mkBar(id,labels,data,label,colors,extra={}){
+  const el=document.getElementById(id); if(!el) return;
+  state.charts[id]=new Chart(el,{type:"bar",data:{labels,datasets:[{label,data,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{grid:{color:"#F1F5F9"},border:{display:false}},x:{grid:{display:false},border:{display:false}}},...extra}});
+}
+function mkLine(id,labels,datasets){
+  const el=document.getElementById(id); if(!el) return;
+  state.charts[id]=new Chart(el,{type:"line",data:{labels,datasets:datasets.map(d=>({...d,backgroundColor:d.bg,fill:true,tension:.4,pointRadius:3,pointHoverRadius:5}))},
+    options:{plugins:{legend:{position:"bottom"}},scales:{y:{grid:{color:"#F1F5F9"},border:{display:false}},x:{grid:{display:false},border:{display:false}}}}});
+}
+function mkDoughnut(id,labels,data,colors,showLegend=false){
+  const el=document.getElementById(id); if(!el) return;
+  const bgColors=colors||TC.slice(0,data.length);
+  state.charts[id]=new Chart(el,{type:"doughnut",data:{labels,datasets:[{data,backgroundColor:bgColors,borderWidth:2,borderColor:"#fff",hoverOffset:4}]},
+    options:{plugins:{legend:{display:showLegend,position:"bottom"}},cutout:"58%"}});
+}
+
+// ═══ ACTIONS ═════════════════════════════════════════════
+function selectClient(name){
+  state.selected=state.clients.find(c=>c.name===name);
+  if(state.selected){state.screen="detail";state.detailTab="overview";render();}
+}
+function goBack(){state.screen="dashboard";state.selected=null;render();}
+function logout(){state.screen="login";state.clients=[];loginVerified=false;render();}
+async function loadMetrics2(){
+  state.screen="loading";render();
+  try{
+    const d=await post("/metrics",state.creds);
+    if(!d.ok) throw new Error(d.error||"Error");
+    state.clients=d.clients||[];
+    state.meta={total:d.total_issues,at:d.generated_at};
+    state.warning=d.warning||"";
+    state.screen="dashboard";state.filter="all";
+  }catch(e){state.error=e.message;state.screen="error";}
+  render();
+}
+
+// ═══ EXPORTS ══════════════════════════════════════════════
+async function exportExcel(){
+  try{
+    const r=await fetch(API+"/export/excel",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({clients:state.clients})});
+    if(!r.ok){const e=await r.json();alert("Error: "+e.error);return;}
+    const blob=await r.blob();
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download=`csm_${new Date().toISOString().slice(0,10)}.xlsx`;a.click();
+  }catch(e){alert("Error al exportar: "+e.message);}
+}
+async function exportPDF(){
+  try{
+    const r=await fetch(API+"/export/pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({clients:state.clients})});
+    if(!r.ok){const e=await r.json();alert("Error: "+e.error);return;}
+    const blob=await r.blob();
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download=`csm_${new Date().toISOString().slice(0,10)}.pdf`;a.click();
+  }catch(e){alert("Error al exportar: "+e.message);}
+}
+
+// ═══ PPT WITH CHARTS ══════════════════════════════════════
+function exportPPT(){
+  const c = state.selected;
+  if(!c){ alert("Abrí el detalle de un cliente primero."); return; }
+  try{
+    const pptx = new PptxGenJS();
+    pptx.layout = "LAYOUT_WIDE";
+    const sat = computeSatisfaction(c);
+    const healthColor = c.health>=70?"10B981":c.health>=50?"F59E0B":"EF4444";
+    const satColor    = sat.satisfactionScore>=70?"10B981":sat.satisfactionScore>=50?"F59E0B":"EF4444";
+    const slaColor    = c.sla_pct>=80?"059669":"DC2626";
+
+    // ── Configuración de tema ──────────────────────────
+    const NAVY   = "0D1F3C";
+    const NAVY2  = "1A3461";
+    const WHITE  = "FFFFFF";
+    const SLATE  = "64748B";
+    const BORDER = "E2E8F0";
+    const BG     = "F8FAFC";
+
+    // ── SLIDE 1: Portada ───────────────────────────────
+    const s1 = pptx.addSlide();
+    s1.background = {color: NAVY};
+    // Acento visual
+    s1.addShape(pptx.ShapeType.rect, {x:0,y:0,w:.4,h:5.63,fill:{color:"2563EB"}});
+    s1.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.08,fill:{color:"2563EB"}});
+    s1.addText("CUSTOMER SUCCESS REPORT",
+      {x:.8,y:.6,w:11,h:.5,fontSize:11,bold:true,color:"2563EB",fontFace:"Arial",charSpacing:3});
+    s1.addText(c.name,
+      {x:.8,y:1.2,w:11,h:1.6,fontSize:42,bold:true,color:WHITE,fontFace:"Arial",valign:"top"});
+    s1.addShape(pptx.ShapeType.rect, {x:.8,y:2.85,w:2,h:.05,fill:{color:"2563EB"}});
+    s1.addText(`Health Score`,
+      {x:.8,y:3.05,w:3,h:.35,fontSize:11,color:"94A3B8",fontFace:"Arial",charSpacing:1});
+    s1.addText(`${c.health}/100`,
+      {x:.8,y:3.45,w:3,h:.7,fontSize:32,bold:true,color:healthColor,fontFace:"Arial"});
+    s1.addText(`Satisfacción`,
+      {x:3.8,y:3.05,w:3,h:.35,fontSize:11,color:"94A3B8",fontFace:"Arial",charSpacing:1});
+    s1.addText(`${sat.satisfactionScore}/100`,
+      {x:3.8,y:3.45,w:3,h:.7,fontSize:32,bold:true,color:satColor,fontFace:"Arial"});
+    s1.addText(`SLA · ${c.sla_pct}%  ·  MTTR · ${c.mttr}h  ·  Total · ${c.total} tickets`,
+      {x:.8,y:4.6,w:11,h:.4,fontSize:13,color:"94A3B8",fontFace:"Arial"});
+    s1.addText(new Date().toLocaleDateString("es-AR",{day:"2-digit",month:"long",year:"numeric"}),
+      {x:.8,y:5.1,w:5,h:.35,fontSize:11,color:"475569",fontFace:"Arial"});
+
+    // ── SLIDE 2: KPIs + Gráfico SLA Donut ──────────────
+    const s2 = pptx.addSlide();
+    s2.background = {color: "F8FAFC"};
+    s2.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.55,fill:{color:NAVY}});
+    s2.addText("KPIs Principales",
+      {x:.3,y:.1,w:12,h:.35,fontSize:17,bold:true,color:WHITE,fontFace:"Arial"});
+
+    const kpiData = [
+      ["Health Score",      `${c.health}/100`,      healthColor],
+      ["Satisfacción Est.", `${sat.satisfactionScore}/100`,satColor],
+      ["SLA Tiempo Abs.",   `${c.sla_pct}%`,         slaColor],
+      ["MTTR promedio",     `${c.mttr}h`,             "2563EB"],
+      ["P50 resolución",    `${c.res_p50||0}h`,       "2563EB"],
+      ["P90 resolución",    `${c.res_p90||0}h`,       "D97706"],
+      ["1ª Respuesta SLA",  `${c.first_response_pct||0}%`, (c.first_response_pct||0)>=80?"059669":"D97706"],
+      ["FCR (Proxy)",       `${sat.fcrRate}%`,        sat.fcrRate>=85?"059669":sat.fcrRate>=70?"D97706":"DC2626"],
+      ["Total tickets",     `${c.total}`,             NAVY],
+      ["Abiertos",          `${c.open}`,              c.open>8?"DC2626":NAVY],
+      [">7 días abiertos",  `${c.aging_7}`,           c.aging_7>2?"DC2626":"059669"],
+      ["Escalación",        `${sat.escalationRate}%`, sat.escalationRate>20?"DC2626":sat.escalationRate>10?"D97706":"059669"],
+      ["vs período ant.",   c.total_vs_prev_pct!=null?`${c.total_vs_prev_pct>0?"+":""}${c.total_vs_prev_pct}%`:"—",
+        c.total_vs_prev_pct>0?"DC2626":c.total_vs_prev_pct<0?"059669":"64748B"],
+      ["Críticos (30d)",    `${c.last30_critical||0}`, (c.last30_critical||0)>5?"DC2626":"D97706"],
+      ["Resueltos (30d)",   `${c.last30_resolved||0}`, "059669"],
+    ];
+
+    // 3 columnas × 4 filas (left side), donut SLA a la derecha sin overlap
+    kpiData.slice(0,12).forEach(([lbl,val,col],i)=>{
+      const col_x = i%3;
+      const row_y = Math.floor(i/3);
+      const bx = .3 + col_x*2.9;
+      const by = .7 + row_y*1.22;
+      s2.addShape(pptx.ShapeType.rect, {x:bx,y:by,w:2.7,h:1.10,fill:{color:WHITE},line:{color:BORDER,pt:1},shadow:{type:"outer",color:"0D1F3C",opacity:.08,blur:4,offset:2,angle:270}});
+      s2.addShape(pptx.ShapeType.rect, {x:bx,y:by,w:.07,h:1.10,fill:{color:col}});
+      s2.addText(lbl, {x:bx+.15,y:by+.1,w:2.5,h:.28,fontSize:9,color:SLATE,fontFace:"Arial",charSpacing:.5});
+      s2.addText(val, {x:bx+.15,y:by+.4,w:2.5,h:.52,fontSize:22,bold:true,color:col,fontFace:"Arial"});
+    });
+
+    // SLA Donut chart — derecha, sin overlap (comienza en x=9.2, KPIs terminan en .3+3*2.9=9.0)
+    s2.addChart(pptx.ChartType.doughnut, [{name:"SLA",labels:["Good","Bad"],values:[c.sla_good||1,c.sla_bad||0]}], {
+      x:9.2, y:.65, w:3.9, h:4.9,
+      holeSize: 60,
+      chartColors: ["059669","EF4444"],
+      showLegend: true,
+      legendPos: "b",
+      legendFontSize: 10,
+      showTitle: true,
+      title: "SLA Compliance",
+      titleFontSize: 12,
+      titleColor: NAVY,
+      dataLabelFontSize: 11,
+      showValue: false,
+      showPercent: true,
+    });
+
+    // ── SLIDE 3: Satisfacción del Cliente ──────────────
+    const s3 = pptx.addSlide();
+    s3.background = {color: "F8FAFC"};
+    s3.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.55,fill:{color:NAVY}});
+    s3.addText("Satisfacción & Control del Cliente",
+      {x:.3,y:.1,w:12,h:.35,fontSize:17,bold:true,color:WHITE,fontFace:"Arial"});
+
+    // Score grande
+    s3.addShape(pptx.ShapeType.rect, {x:.3,y:.7,w:3.5,h:4.5,fill:{color:NAVY},shadow:{type:"outer",color:"0D1F3C",opacity:.2,blur:8,offset:3,angle:270}});
+    s3.addText("Score de\nSatisfacción", {x:.5,y:.9,w:3.1,h:.7,fontSize:13,bold:true,color:"94A3B8",fontFace:"Arial"});
+    s3.addText(`${sat.satisfactionScore}`, {x:.5,y:1.7,w:3.1,h:1.5,fontSize:64,bold:true,color:satColor,fontFace:"Arial",valign:"top"});
+    s3.addText("/100", {x:.5,y:3.1,w:3.1,h:.4,fontSize:18,color:"64748B",fontFace:"Arial"});
+    s3.addText(sat.satisfactionScore>=70?"Excelente":sat.satisfactionScore>=60?"Bueno":sat.satisfactionScore>=45?"Regular":"Bajo",
+      {x:.5,y:3.6,w:3.1,h:.4,fontSize:16,bold:true,color:satColor,fontFace:"Arial"});
+
+    // Métricas de satisfacción - barras
+    const satMetrics = [
+      {lbl:"FCR Rate (Sin Reaberturas)", val:sat.fcrRate, col:sat.fcrRate>=85?"059669":"EF4444"},
+      {lbl:"SLA Cumplimiento",           val:c.sla_pct,   col:c.sla_pct>=80?"059669":"EF4444"},
+      {lbl:"1ª Respuesta SLA",           val:c.first_response_pct||0, col:(c.first_response_pct||0)>=80?"059669":"D97706"},
+      {lbl:"Calidad (vs Bug Rate)",       val:sat.qualityScore, col:sat.qualityScore>=80?"059669":"D97706"},
+    ];
+    s3.addChart(pptx.ChartType.bar, satMetrics.map(m=>({name:m.lbl,labels:[""],values:[m.val]})), {
+      x:4.1, y:.7, w:5.5, h:4.5,
+      barDir: "bar",
+      chartColors: satMetrics.map(m=>m.col),
+      showValue: true,
+      dataLabelFontSize: 10,
+      showLegend: true,
+      legendPos: "b",
+      valAxisMaxVal: 100,
+      catAxisLabelFontSize: 10,
+      valAxisLabelFontSize: 9,
+      showTitle: true, title: "Componentes del Score", titleFontSize:12, titleColor:NAVY,
+      plotArea: {border:{color:BORDER,pt:0.5}},
+    });
+
+    // Métricas adicionales
+    const ctrlMets = [
+      ["Escalación", `${sat.escalationRate}%`, sat.escalationRate>20?"DC2626":"059669", "Tickets críticos / total"],
+      ["Backlog %",  `${sat.backlogPct}%`,      sat.backlogPct>40?"DC2626":sat.backlogPct>20?"D97706":"059669", "Abiertos / total"],
+      ["Vel./semana",`${sat.resVelocity}`,      "2563EB", "Resueltos / sem (30d)"],
+    ];
+    ctrlMets.forEach(([lbl,val,col,sub],i)=>{
+      const bx = 9.9 + (i<1?0:0);
+      s3.addShape(pptx.ShapeType.rect, {x:9.9,y:.7+i*1.55,w:3.1,h:1.4,fill:{color:WHITE},line:{color:BORDER,pt:1}});
+      s3.addShape(pptx.ShapeType.rect, {x:9.9,y:.7+i*1.55,w:.07,h:1.4,fill:{color:col}});
+      s3.addText(lbl, {x:10.05,y:.8+i*1.55,w:2.9,h:.28,fontSize:9,color:SLATE,fontFace:"Arial"});
+      s3.addText(val, {x:10.05,y:1.1+i*1.55,w:2.9,h:.55,fontSize:26,bold:true,color:col,fontFace:"Arial"});
+      s3.addText(sub, {x:10.05,y:1.68+i*1.55,w:2.9,h:.25,fontSize:8,color:"94A3B8",fontFace:"Arial"});
+    });
+
+    // ── SLIDE 4: Tendencia Trimestral ──────────────────
+    const qEntries = Object.entries(c.by_quarter||{}).sort((a,b)=>a[0].localeCompare(b[0]));
+    const monthEntries = Object.entries(c.by_month||{});
+    if(qEntries.length || monthEntries.length){
+      const s4 = pptx.addSlide();
+      s4.background = {color:"F8FAFC"};
+      s4.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.55,fill:{color:NAVY}});
+      s4.addText("Tendencia Trimestral y Mensual",
+        {x:.3,y:.1,w:12,h:.35,fontSize:17,bold:true,color:WHITE,fontFace:"Arial"});
+
+      if(qEntries.length){
+        s4.addChart(pptx.ChartType.bar,
+          [{name:"Tickets", labels:qEntries.map(e=>e[0]), values:qEntries.map(e=>e[1])}],
+          {x:.3,y:.65,w:6.0,h:4.5,
+            chartColors:["2563EB"],
+            showValue:true, dataLabelFontSize:10,
+            showLegend:false,
+            catAxisLabelFontSize:10, valAxisLabelFontSize:9,
+            showTitle:true, title:"Por Trimestre", titleFontSize:12, titleColor:NAVY,
+          });
+      }
+      if(monthEntries.length){
+        const last12 = monthEntries.slice(-12);
+        s4.addChart(pptx.ChartType.line,
+          [{name:"Tickets", labels:last12.map(e=>e[0]), values:last12.map(e=>e[1])}],
+          {x:6.5,y:.65,w:6.5,h:4.5,
+            chartColors:["0891B2"],
+            lineSize: 2,
+            showDot: true,
+            showValue:false,
+            showLegend:false,
+            catAxisLabelFontSize:9, valAxisLabelFontSize:9,
+            showTitle:true, title:"Tendencia Mensual (últimos 12m)", titleFontSize:12, titleColor:NAVY,
+          });
+      }
+    }
+
+    // ── SLIDE 5: Prioridad y Tipo ──────────────────────
+    const prioE = Object.entries(c.by_priority||{}).sort((a,b)=>b[1]-a[1]);
+    const typeE = Object.entries(c.by_type||{}).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    if(prioE.length || typeE.length){
+      const s5 = pptx.addSlide();
+      s5.background = {color:"F8FAFC"};
+      s5.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.55,fill:{color:NAVY}});
+      s5.addText("Distribución por Prioridad y Tipo",
+        {x:.3,y:.1,w:12,h:.35,fontSize:17,bold:true,color:WHITE,fontFace:"Arial"});
+
+      if(prioE.length){
+        const prioColors = prioE.map(([n])=>
+          (PRIO_COLORS[n]||"64748B").replace("#",""));
+        s5.addChart(pptx.ChartType.bar,
+          [{name:"Tickets",labels:prioE.map(e=>e[0]),values:prioE.map(e=>e[1])}],
+          {x:.3,y:.65,w:6.2,h:4.5,
+            chartColors:prioColors,
+            barDir:"bar",
+            showValue:true, dataLabelFontSize:10,
+            showLegend:false,
+            catAxisLabelFontSize:10, valAxisLabelFontSize:9,
+            showTitle:true, title:"Por Prioridad", titleFontSize:12, titleColor:NAVY,
+          });
+      }
+      if(typeE.length){
+        s5.addChart(pptx.ChartType.pie,
+          [{name:"Tipos",labels:typeE.map(e=>e[0]),values:typeE.map(e=>e[1])}],
+          {x:6.6,y:.65,w:6.5,h:4.5,
+            chartColors:["2563EB","059669","D97706","7C3AED","DC2626","0891B2","9D4EDD","F97316"],
+            showLegend:true, legendPos:"r", legendFontSize:9,
+            showPercent:true, dataLabelFontSize:10,
+            showTitle:true, title:"Por Tipo de Ticket", titleFontSize:12, titleColor:NAVY,
+          });
+      }
+    }
+
+    // ── SLIDE 6: Motivo de Ticket ──────────────────────
+    const motivoE = Object.entries(c.by_motivo||{}).slice(0,10);
+    if(motivoE.length){
+      const s6 = pptx.addSlide();
+      s6.background = {color:"F8FAFC"};
+      s6.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.55,fill:{color:NAVY}});
+      s6.addText("Motivo de Ticket",
+        {x:.3,y:.1,w:12,h:.35,fontSize:17,bold:true,color:WHITE,fontFace:"Arial"});
+
+      // Horizontal bar chart
+      s6.addChart(pptx.ChartType.bar,
+        [{name:"Tickets",labels:motivoE.map(e=>e[0]),values:motivoE.map(e=>e[1])}],
+        {x:.3,y:.65,w:8.5,h:4.5,
+          barDir:"bar",
+          chartColors:["2563EB","059669","D97706","7C3AED","DC2626","0891B2","9D4EDD","F97316","065F46","BE185D"],
+          showValue:true, dataLabelFontSize:9,
+          showLegend:false,
+          catAxisLabelFontSize:9, valAxisLabelFontSize:9,
+          showTitle:true, title:"Top Motivos", titleFontSize:12, titleColor:NAVY,
+        });
+
+      // Summary table on right
+      const mRows=[
+        [{text:"Motivo",options:{bold:true,fill:{color:NAVY},color:WHITE,fontSize:9}},
+         {text:"#",     options:{bold:true,fill:{color:NAVY},color:WHITE,fontSize:9}},
+         {text:"%",     options:{bold:true,fill:{color:NAVY},color:WHITE,fontSize:9}}],
+        ...motivoE.map(([m,v])=>[
+          {text:m.substring(0,28),options:{fontSize:9}},
+          {text:String(v),        options:{fontSize:9,bold:true,align:"center"}},
+          {text:`${Math.round(v/c.total*100)}%`,options:{fontSize:9,align:"center"}}
+        ])
+      ];
+      s6.addTable(mRows,{x:9.1,y:.65,w:4.0,colW:[2.4,.8,.8],
+        fontSize:9,border:{type:"solid",color:BORDER,pt:0.5},
+        rowH:.32,align:"left",valign:"middle"});
+    }
+
+    // ── SLIDE 7-NUEVO: Resumen Criticidad + Motivo + SLA (estilo reporte) ──
+    {
+      const s7r = pptx.addSlide();
+      s7r.background = {color:"F5F0E8"};
+      s7r.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.55,fill:{color:NAVY}});
+      s7r.addText("Resumen Operativo — Criticidad · Motivo · SLA",
+        {x:.3,y:.1,w:12,h:.35,fontSize:17,bold:true,color:WHITE,fontFace:"Arial"});
+
+      // Tabla Por criticidad
+      const prioByGroup = {};
+      Object.entries(c.by_priority||{}).forEach(([k,v])=>{ prioByGroup[k]=(prioByGroup[k]||0)+v; });
+      const critCount  = (prioByGroup["Crítico"]||0)+(prioByGroup["Crítica"]||0)+(prioByGroup["Urgente"]||0);
+      const altoCount  = (prioByGroup["Alto"]||0)+(prioByGroup["Alta"]||0);
+      const medioCount = (prioByGroup["Medio"]||0)+(prioByGroup["Media"]||0);
+      const bajoCount  = (prioByGroup["Bajo"]||0)+(prioByGroup["Baja"]||0);
+      const planCount  = (prioByGroup["Planificado"]||0)+(prioByGroup["Planificada"]||0);
+      const critTableRows = [
+        [{text:"Por criticidad",options:{bold:true,fill:{color:"4A5568"},color:WHITE,fontSize:10,colspan:2}}],
+        [{text:"Críticos",     options:{fontSize:10,color:"DC2626",bold:true}}, {text:String(critCount),  options:{fontSize:10,align:"right",bold:true,color:"DC2626"}}],
+        [{text:"Altos",        options:{fontSize:10,color:"D97706"}},           {text:String(altoCount),  options:{fontSize:10,align:"right"}}],
+        [{text:"Medios",       options:{fontSize:10,color:"2563EB"}},           {text:String(medioCount), options:{fontSize:10,align:"right"}}],
+        [{text:"Bajos",        options:{fontSize:10,color:"64748B"}},           {text:String(bajoCount),  options:{fontSize:10,align:"right"}}],
+        [{text:"Planificados", options:{fontSize:10,color:"7C3AED"}},           {text:String(planCount),  options:{fontSize:10,align:"right"}}],
+        [{text:"Suma total",   options:{bold:true,fontSize:10,fill:{color:"EDF2F7"}}},{text:String(c.total),options:{bold:true,fontSize:10,align:"right",fill:{color:"EDF2F7"}}}],
+      ];
+      s7r.addTable(critTableRows,{x:.3,y:.65,w:3.8,colW:[2.8,1.0],
+        border:{type:"solid",color:"CBD5E1",pt:0.5},rowH:.38,valign:"middle"});
+
+      // Tabla Por motivo
+      const motivoTop8 = Object.entries(c.by_motivo||{}).slice(0,8);
+      if(motivoTop8.length){
+        const mHeaderRows=[
+          [{text:"Por motivo",options:{bold:true,fill:{color:"4A5568"},color:WHITE,fontSize:10}},
+           {text:"Cantidad",  options:{bold:true,fill:{color:"4A5568"},color:WHITE,fontSize:10,align:"center"}}],
+          ...motivoTop8.map(([m,v])=>[
+            {text:m.substring(0,30),options:{fontSize:9}},
+            {text:String(v),        options:{fontSize:9,align:"center",bold:true}}
+          ])
+        ];
+        s7r.addTable(mHeaderRows,{x:.3,y:3.55,w:3.8,colW:[2.8,1.0],
+          border:{type:"solid",color:"CBD5E1",pt:0.5},rowH:.3,valign:"middle"});
+      }
+
+      // Tabla Métricas SLA
+      const slaIntBreachPct = Math.round(100-(c.first_response_pct||0));
+      const slaMetRows = [
+        [{text:"SLA infringido",         options:{fontSize:10,fill:{color:"FFF3CD"}}},
+         {text:`${Math.round(100-c.sla_pct)}%`,options:{fontSize:10,bold:true,align:"right",fill:{color:"FFF3CD"},color:"D97706"}}],
+        [{text:"SLA interno infringido", options:{fontSize:10,fill:{color:"FFF3CD"}}},
+         {text:`${slaIntBreachPct}%`,    options:{fontSize:10,bold:true,align:"right",fill:{color:"FFF3CD"},color:"D97706"}}],
+        [{text:"Tiempo prom. resolución",options:{fontSize:10}},
+         {text:`${Math.round((c.mttr||0)*60)} min`,options:{fontSize:10,bold:true,align:"right"}}],
+        [{text:"Tiempo absoluto prom.",  options:{fontSize:10}},
+         {text:`${c.critical_abs_avg_h||c.mttr||0} hs`,options:{fontSize:10,bold:true,align:"right"}}],
+      ];
+      s7r.addTable(slaMetRows,{x:.3,y:6.05,w:3.8,colW:[2.8,1.0],
+        border:{type:"solid",color:"CBD5E1",pt:0.5},rowH:.34,valign:"middle"});
+      s7r.addText("* El tiempo absoluto se cuenta desde apertura hasta cierre, incluyendo tiempo en 'Esperando información'",
+        {x:.3,y:7.3,w:5,h:.4,fontSize:7.5,color:"64748B",fontFace:"Arial",italic:true});
+
+      // Pie chart Tickets por motivo
+      const motivoPie = Object.entries(c.by_motivo||{}).slice(0,8);
+      if(motivoPie.length){
+        s7r.addText("Tickets por motivo",
+          {x:4.5,y:.65,w:8.5,h:.5,fontSize:18,bold:true,color:NAVY,fontFace:"Arial"});
+        s7r.addChart(pptx.ChartType.pie,
+          [{name:"Motivos",labels:motivoPie.map(e=>e[0]),values:motivoPie.map(e=>e[1])}],
+          {x:4.5, y:1.2, w:8.5, h:6.4,
+            chartColors:["EF4444","2563EB","F97316","059669","7C3AED","0891B2","D97706","6B7280"],
+            showLegend:true, legendPos:"r", legendFontSize:9,
+            showPercent:true, dataLabelFontSize:10,
+            showTitle:false,
+          });
+      }
+    }
+
+    // ── SLIDE 8: Tickets Críticos ──────────────────────
+    if((c.critical_total||0)>0){
+      const s7 = pptx.addSlide();
+      s7.background = {color:"F8FAFC"};
+      s7.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.55,fill:{color:"991B1B"}});
+      s7.addText("🔴 Análisis de Tickets Críticos",
+        {x:.3,y:.1,w:12,h:.35,fontSize:17,bold:true,color:WHITE,fontFace:"Arial"});
+
+      // SLA críticos donut
+      s7.addChart(pptx.ChartType.doughnut,
+        [{name:"SLA",labels:["Good","Bad"],values:[c.critical_sla_good||1,c.critical_sla_bad||0]}],
+        {x:.3,y:.7,w:4.5,h:4.5,
+          holeSize:60,
+          chartColors:["059669","EF4444"],
+          showLegend:true, legendPos:"b", legendFontSize:10,
+          showPercent:true, dataLabelFontSize:11,
+          showTitle:true, title:`SLA Críticos (${c.critical_sla_pct||0}%)`, titleFontSize:12, titleColor:"991B1B",
+        });
+
+      // Prioridad críticos
+      const critPE = Object.entries(c.critical_by_priority||{});
+      if(critPE.length){
+        s7.addChart(pptx.ChartType.bar,
+          [{name:"Críticos",labels:critPE.map(e=>e[0]),values:critPE.map(e=>e[1])}],
+          {x:5.0,y:.7,w:4.5,h:4.5,
+            chartColors:critPE.map(([n])=>(PRIO_COLORS[n]||"DC2626").replace("#","")),
+            barDir:"bar",
+            showValue:true, dataLabelFontSize:10,
+            showLegend:false,
+            showTitle:true, title:"Prioridad (Críticos)", titleFontSize:12, titleColor:NAVY,
+          });
+      }
+
+      // KPIs críticos
+      const critKpis=[
+        ["Total Críticos",  String(c.critical_total||0),      "DC2626"],
+        ["SLA Críticos",   `${c.critical_sla_pct||0}%`,       (c.critical_sla_pct||0)>=80?"059669":"DC2626"],
+        ["MTTR Críticos",  `${c.critical_mttr||0}h`,          "2563EB"],
+        ["T° Abs. P90",    `${c.critical_abs_p90||0}h`,       "D97706"],
+      ];
+      critKpis.forEach(([lbl,val,col],i)=>{
+        s7.addShape(pptx.ShapeType.rect, {x:9.8,y:.7+i*1.15,w:3.2,h:1.05,fill:{color:WHITE},line:{color:BORDER,pt:1}});
+        s7.addShape(pptx.ShapeType.rect, {x:9.8,y:.7+i*1.15,w:.07,h:1.05,fill:{color:col}});
+        s7.addText(lbl, {x:9.95,y:.78+i*1.15,w:3.0,h:.28,fontSize:9,color:SLATE,fontFace:"Arial"});
+        s7.addText(val, {x:9.95,y:1.05+i*1.15,w:3.0,h:.5,fontSize:22,bold:true,color:col,fontFace:"Arial"});
+      });
+    }
+
+    // ── SLIDE 8: Resumen Últimos 30 Días ──────────────
+    const s8 = pptx.addSlide();
+    s8.background = {color:"F8FAFC"};
+    s8.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.55,fill:{color:NAVY}});
+    s8.addText("Resumen Últimos 30 Días",
+      {x:.3,y:.1,w:12,h:.35,fontSize:17,bold:true,color:WHITE,fontFace:"Arial"});
+
+    const l30Items = [
+      {lbl:"SLA Infringido",   val:`${c.last30_sla_breach_pct||0}%`,  col:"EF4444",  sub:`${c.last30_sla_bad||0} breach · ${c.last30_sla_good||0} ok`, bg:"FEF2F2"},
+      {lbl:"Tickets Críticos", val:`${c.last30_critical||0}`,          col:"D97706",  sub:`de ${c.last30_total||0} creados`, bg:"FFFBEB"},
+      {lbl:"T° Abs. Críticos", val:`${c.critical_abs_avg_h||0}h`,      col:"2563EB",  sub:`prom · P90: ${c.critical_abs_p90||0}h`, bg:"EFF6FF"},
+      {lbl:"Resueltos",        val:`${c.last30_resolved||0}`,           col:"059669",  sub:`de ${c.last30_total||0} creados`, bg:"ECFDF5"},
+      {lbl:"Vel. Resolución",  val:`${sat.resVelocity}/sem`,            col:"7C3AED",  sub:"tickets cerrados/semana", bg:"F5F3FF"},
+    ];
+    l30Items.forEach(({lbl,val,col,sub,bg},i)=>{
+      const bx = .3 + i*2.55;
+      s8.addShape(pptx.ShapeType.rect, {x:bx,y:.7,w:2.35,h:1.6,fill:{color:bg},line:{color:col,pt:1}});
+      s8.addShape(pptx.ShapeType.rect, {x:bx,y:.7,w:2.35,h:.08,fill:{color:col}});
+      s8.addText(lbl, {x:bx+.1,y:.85,w:2.15,h:.35,fontSize:9,bold:true,color:col,fontFace:"Arial",charSpacing:.5});
+      s8.addText(val, {x:bx+.1,y:1.2,w:2.15,h:.75,fontSize:26,bold:true,color:col,fontFace:"Arial",valign:"top"});
+      s8.addText(sub, {x:bx+.1,y:2.05,w:2.15,h:.2,fontSize:8,color:"64748B",fontFace:"Arial"});
+    });
+
+    // Gráfico de día-por-día (30d) si hay datos
+    const dayE = Object.entries(c.by_day||{}).slice(-30);
+    if(dayE.length){
+      s8.addChart(pptx.ChartType.bar,
+        [{name:"Tickets/día",labels:dayE.map(e=>e[0].slice(5)),values:dayE.map(e=>e[1])}],
+        {x:.3,y:2.5,w:12.7,h:2.8,
+          chartColors:["2563EB"],
+          showValue:false,
+          showLegend:false,
+          catAxisLabelFontSize:8, valAxisLabelFontSize:9,
+          showTitle:true, title:"Volumen Diario (últimos 30 días)", titleFontSize:11, titleColor:NAVY,
+        });
+    }
+
+    // ── SLIDE 9: Contraportada ─────────────────────────
+    const s9 = pptx.addSlide();
+    s9.background = {color:NAVY};
+    s9.addShape(pptx.ShapeType.rect, {x:0,y:0,w:13.33,h:.08,fill:{color:"2563EB"}});
+    s9.addShape(pptx.ShapeType.rect, {x:0,y:5.55,w:13.33,h:.08,fill:{color:"2563EB"}});
+    s9.addText("📊",
+      {x:5.5,y:1.5,w:2.33,h:1.2,fontSize:48,align:"center"});
+    s9.addText("CSM Dashboard",
+      {x:1,y:2.7,w:11.33,h:.8,fontSize:28,bold:true,color:WHITE,fontFace:"Arial",align:"center"});
+    s9.addText("Customer Success Intelligence",
+      {x:1,y:3.5,w:11.33,h:.5,fontSize:14,color:"94A3B8",fontFace:"Arial",align:"center"});
+    s9.addText(`Reporte generado: ${new Date().toLocaleDateString("es-AR")} · Período: ${state.creds?.days||90} días`,
+      {x:1,y:4.5,w:11.33,h:.35,fontSize:10,color:"475569",fontFace:"Arial",align:"center"});
+
+    const fname = `${c.name.replace(/[^a-zA-Z0-9]/g,"_")}_CSM_${new Date().toISOString().slice(0,10)}.pptx`;
+    pptx.writeFile({fileName: fname});
+  }catch(e){
+    console.error(e);
+    alert("Error al generar PPT: "+e.message+"\n"+e.stack);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
